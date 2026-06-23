@@ -18,11 +18,12 @@ object CurrencyFormatter {
         return String.format("%,.0f", amount)
     }
     
-    fun parse(formatted: String): Double? {
-        return try {
-            formatted.replace("[^0-9.]".toRegex(), "").toDouble()
-        } catch (e: Exception) {
-            null
-        }
+fun parse(formatted: String): Double? {
+    return try {
+        formatted.replace("[^\\d]".toRegex(), "").toDouble()
+    } catch (e: Exception) {
+        null
     }
+}
+
 }
