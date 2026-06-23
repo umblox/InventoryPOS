@@ -86,4 +86,31 @@ fun ProductDeleteDialog(
                     Text(
                         text = "This action cannot be undone. All associated data will be permanently removed.",
                         style = MaterialTheme.typography.bodySmall,
-                       
+                                               color = PremiumError.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            CustomButton(
+                text = "Delete Permanently",
+                onClick = { viewModel.deleteProduct(productId) },
+                isLoading = isDeleting,
+                containerColor = PremiumError,
+                contentColor = PremiumTextPrimary
+            )
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = { navController.popBackStack() },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = PremiumTextSecondary
+                )
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
