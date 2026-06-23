@@ -1,0 +1,49 @@
+<resources>
+    <string name="app_name">Inventory POS</string>
+    <string name="app_version">v1.0.0 Premium</string>
+    
+    <!-- Auth -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_login">Sign In</string>
+    <string name="btn_biometric_login">Use Fingerprint</string>
+    <string name="forgot_password">Forgot Password?</string>
+    
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_pos">POS</string>
+    <string name="nav_inventory">Inventory</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_customers">Customers</string>
+    <string name="nav_settings">Settings</string>
+    
+    <!-- Product -->
+    <string name="product_add_title">Add New Product</string>
+    <string name="product_edit_title">Edit Product</string>
+    <string name="product_name_hint">Product Name</string>
+    <string name="product_sku_hint">SKU / Barcode</string>
+    <string name="product_price_hint">Price</string>
+    <string name="product_stock_hint">Stock Quantity</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_update">Update</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="confirm_delete_title">Delete Product?</string>
+    <string name="confirm_delete_message">This action cannot be undone.</string>
+    
+    <!-- POS -->
+    <string name="pos_title">Point of Sale</string>
+    <string name="pos_cart_empty">Cart is empty</string>
+    <string name="pos_total">Total</string>
+    <string name="pos_pay">Pay</string>
+    <string name="pos_hold">Hold</string>
+    <string name="pos_clear">Clear</string>
+    
+    <!-- Errors -->
+    <string name="error_required">This field is required</string>
+    <string name="error_invalid_number">Please enter a valid number</string>
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_generic">Something went wrong</string>
+</resources>
