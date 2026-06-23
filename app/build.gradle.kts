@@ -62,6 +62,14 @@ android {
     }
 }
 
+// REPOSITORIES - TAMBAHKAN JITPACK
+repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }  // ← WAJIB untuk library GitHub
+    maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots") }
+}
+
 dependencies {
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
@@ -113,16 +121,22 @@ dependencies {
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
     
-    // Charts
+    // Charts (Vico)
     implementation("com.patrykandpatrick.vico:compose:1.13.1")
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
     
-    // Barcode/QR
+    // Barcode/QR (ZXing)
     implementation("com.google.zxing:core:3.5.2")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     
-    // Bluetooth Printer
-    implementation("com.github.DantSu:ESCPOS-ThermalPrinter-Android:3.3.0")
+    // Bluetooth Printer - ALTERNATIF 1: DantSu via JitPack
+    // implementation("com.github.DantSu:ESCPOS-ThermalPrinter-Android:3.3.0")
+    
+    // ALTERNATIF 2: Gunakan library yang lebih stabil
+    // implementation("com.github.Thinstation:ESCPOS-ThermalPrinter-Android:3.3.0")
+    
+    // ALTERNATIF 3: Sementara hapus dulu, implementasi manual nanti
+    // implementation("com.github.DantSu:ESCPOS-ThermalPrinter-Android:3.3.0")
     
     // Biometric
     implementation("androidx.biometric:biometric:1.1.0")
@@ -154,4 +168,3 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
-
