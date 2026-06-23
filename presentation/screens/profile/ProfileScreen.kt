@@ -1,0 +1,72 @@
+package com.inventorypos.presentation.screens.profile
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.inventorypos.presentation.components.common.*
+import com.inventorypos.presentation.navigation.Screen
+import com.inventorypos.presentation.theme.*
+
+@Composable
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel = hiltViewModel()
+) {
+    val user by viewModel.user.collectAsState()
+
+    Scaffold(
+        topBar = {
+            CustomTopBar(
+                title = "My Profile",
+                subtitle = "Account settings",
+                onBackClick = { navController.popBackStack() }
+            )
+        },
+        containerColor = PremiumDarkBackground
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    DetailCard(Icons.Default.Person, "Name", user?.fullName ?: "-")
+                    DetailCard(Icons.Default.AccountCircle, "Username", user?.username ?: "-")
+                    DetailCard(Icons.Default.Security, "Role", user?.role ?: "-")
+                }
+            }
+
+            CustomButton(
+                text = "Change Password",
+                onClick = { navController.navigate(Screen.ChangePassword.route) },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Default.Lock
+            )
+
+            CustomOutlinedButton(
+                text = "Logout",
+                onClick = { viewModel.logout() },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Default.Logout
+            )
+        }
+    }
+}
