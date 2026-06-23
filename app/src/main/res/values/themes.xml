@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.InventoryPOS" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/premium_dark</item>
+        <item name="android:navigationBarColor">@color/premium_dark</item>
+    </style>
+    
+    <style name="Theme.InventoryPOS.Splash" parent="Theme.InventoryPOS">
+        <item name="android:windowBackground">@color/premium_dark</item>
+    </style>
+</resources>
