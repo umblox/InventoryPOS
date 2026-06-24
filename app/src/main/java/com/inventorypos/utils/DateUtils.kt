@@ -33,8 +33,10 @@ object DateUtils {
         }
     }
     
-    fun getStartOfDay(): Date {
+    // PERBAIKAN: Menerima parameter tanggal untuk fleksibilitas filter laporan
+    fun getStartOfDay(date: Date = Date()): Date {
         val cal = Calendar.getInstance()
+        cal.time = date // Atur kalender ke tanggal yang dilempar
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
@@ -42,8 +44,10 @@ object DateUtils {
         return cal.time
     }
     
-    fun getEndOfDay(): Date {
+    // PERBAIKAN: Menerima parameter tanggal untuk fleksibilitas filter laporan
+    fun getEndOfDay(date: Date = Date()): Date {
         val cal = Calendar.getInstance()
+        cal.time = date // Atur kalender ke tanggal yang dilempar
         cal.set(Calendar.HOUR_OF_DAY, 23)
         cal.set(Calendar.MINUTE, 59)
         cal.set(Calendar.SECOND, 59)
