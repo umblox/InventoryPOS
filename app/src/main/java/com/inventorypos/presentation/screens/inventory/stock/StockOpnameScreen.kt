@@ -29,7 +29,8 @@ fun StockOpnameScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
-    val variance = physicalStock.toIntOrNull()?.minus(systemStock.toIntOrNull() ?: 0) ?: 0
+    val variance = (physicalStock.toIntOrNull() ?: 0) - (systemStock.toIntOrNull() ?: 0)
+
     
     LaunchedEffect(isSuccess) { if (isSuccess) navController.popBackStack() }
     
