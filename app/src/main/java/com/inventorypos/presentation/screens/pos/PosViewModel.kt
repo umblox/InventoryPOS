@@ -42,7 +42,7 @@ class PosViewModel @Inject constructor(
         .map { items -> items.sumOf { it.totalPrice } }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubvised(5000),
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = 0.0
         )
     
