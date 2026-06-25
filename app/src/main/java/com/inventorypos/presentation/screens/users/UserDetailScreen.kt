@@ -75,4 +75,5 @@ fun DetailCard(title: String, value: String) {
         }
     }
     }
+  }
 }
