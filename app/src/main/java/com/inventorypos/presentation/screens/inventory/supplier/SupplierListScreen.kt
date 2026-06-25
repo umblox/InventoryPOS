@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.Alignment
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
