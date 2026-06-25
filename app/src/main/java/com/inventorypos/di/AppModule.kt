@@ -1,11 +1,12 @@
 package com.inventorypos.di
 
-import com.inventorypos.data.local.dao.CategoryDao // Pastikan ini ada
+import com.inventorypos.data.local.dao.CategoryDao
 import com.inventorypos.data.local.dao.ProductDao
-import com.inventorypos.domain.repository.CategoryRepository // Pastikan ini ada
-import com.inventorypos.domain.repository.CategoryRepositoryImpl // Pastikan ini ada
+import com.inventorypos.domain.repository.CategoryRepository
+// Perhatikan import Impl sekarang mengambil dari folder data
+import com.inventorypos.data.repository.CategoryRepositoryImpl 
 import com.inventorypos.domain.repository.ProductRepository
-import com.inventorypos.domain.repository.ProductRepositoryImpl
+import com.inventorypos.data.repository.ProductRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,18 +19,13 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideProductRepository(
-        productDao: ProductDao
-    ): ProductRepository {
+    fun provideProductRepository(productDao: ProductDao): ProductRepository {
         return ProductRepositoryImpl(productDao)
     }
 
-    // TAMBAHKAN BLOK INI:
     @Provides
     @Singleton
-    fun provideCategoryRepository(
-        categoryDao: CategoryDao
-    ): CategoryRepository {
+    fun provideCategoryRepository(categoryDao: CategoryDao): CategoryRepository {
         return CategoryRepositoryImpl(categoryDao)
     }
 }
