@@ -80,6 +80,7 @@ fun DetailCard(title: String, value: String) {
             androidx.compose.material3.Text(text = title, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
             androidx.compose.material3.Text(text = value, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
         }
-    }
+    } 
+}
     }
 }
