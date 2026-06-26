@@ -18,7 +18,11 @@ import com.inventorypos.presentation.screens.inventory.product.*
 import com.inventorypos.presentation.screens.inventory.stock.*
 import com.inventorypos.presentation.screens.pos.*
 import com.inventorypos.presentation.screens.profile.ProfileScreen
-import com.inventorypos.presentation.screens.reports.*
+import com.inventorypos.presentation.screens.reports.sales.*
+import com.inventorypos.presentation.screens.reports.stock.*
+import com.inventorypos.presentation.screens.reports.finance.*
+import com.inventorypos.presentation.screens.pos.payment.*
+import com.inventorypos.presentation.screens.profile.*
 import com.inventorypos.presentation.screens.settings.*
 import com.inventorypos.presentation.screens.splash.SplashScreen
 import com.inventorypos.presentation.screens.users.*
