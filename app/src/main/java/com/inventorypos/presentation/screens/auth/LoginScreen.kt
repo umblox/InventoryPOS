@@ -1,5 +1,7 @@
 package com.inventorypos.presentation.screens.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +28,7 @@ import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
     navController: NavController,
