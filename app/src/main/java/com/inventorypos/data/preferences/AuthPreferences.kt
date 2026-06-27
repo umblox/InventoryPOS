@@ -22,6 +22,7 @@ class AuthPreferences @Inject constructor(
     private val USERNAME = stringPreferencesKey("username")
 
     val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { it[IS_LOGGED_IN] ?: false }
+    val loggedInUserId: Flow<Long> = context.dataStore.data.map { it[USER_ID] ?: -1L }
     
     suspend fun saveSession(userId: Long, username: String) {
         context.dataStore.edit { prefs ->
