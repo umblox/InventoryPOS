@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
+import com.inventorypos.domain.model.Product
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
