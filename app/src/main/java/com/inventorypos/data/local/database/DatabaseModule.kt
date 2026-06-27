@@ -2,11 +2,16 @@ package com.inventorypos.data.local.database
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
 @Module
@@ -18,13 +23,36 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context
     ): AppDatabase {
-        return Room.databaseBuilder(
+        // Kita simpan instance sementara agar bisa dipanggil di dalam Callback
+        var dbInstance: AppDatabase? = null
+        
+        dbInstance = Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "inventory_pos.db"
         )
             .fallbackToDestructiveMigration()
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    // Masukkan akun super admin otomatis saat database baru dibuat
+                    CoroutineScope(Dispatchers.IO).launch {
+                        dbInstance?.userDao()?.insert(
+                            com.inventorypos.data.local.entity.UserEntity(
+                                username = "administrator",
+                                passwordHash = "123456", 
+                                fullName = "Administrator (Owner)",
+                                role = com.inventorypos.data.local.entity.UserRole.SUPER_ADMIN,
+                                isActive = true,
+                                createdAt = java.util.Date()
+                            )
+                        )
+                    }
+                }
+            })
             .build()
+            
+        return dbInstance
     }
     
     @Provides
