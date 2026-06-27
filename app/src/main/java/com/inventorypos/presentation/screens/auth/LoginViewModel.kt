@@ -61,8 +61,7 @@ class LoginViewModel @Inject constructor(
             }
             _isLoading.value = false
         }
-    }
-}    
+    }    
 
     fun loginWithBiometric() {
         // TODO: Implement biometric authentication
