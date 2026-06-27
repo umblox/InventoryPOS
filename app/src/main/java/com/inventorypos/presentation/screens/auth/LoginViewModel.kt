@@ -51,24 +51,19 @@ class LoginViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
             
-            try {
-                // TODO: Call authRepository.login(username, password)
-                // Simulasi delay
-                kotlinx.coroutines.delay(1500)
-                
-                if (_username.value == "admin" && _password.value == "admin") {
-                    _isSuccess.value = true
-                } else {
-                    _error.value = "Invalid username or password"
-                }
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Login failed"
-            } finally {
-                _isLoading.value = false
+            // Panggil Repository asli
+            val result = authRepository.login(_username.value, _password.value)
+            
+            result.onSuccess {
+                _isSuccess.value = true
+            }.onFailure { e ->
+                _error.value = e.message
             }
+            _isLoading.value = false
         }
     }
-    
+}    
+
     fun loginWithBiometric() {
         // TODO: Implement biometric authentication
         viewModelScope.launch {
