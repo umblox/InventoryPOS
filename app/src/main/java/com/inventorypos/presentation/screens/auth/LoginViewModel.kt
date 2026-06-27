@@ -2,6 +2,7 @@ package com.inventorypos.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    // private val authRepository: AuthRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     
     private val _username = MutableStateFlow("")
@@ -51,7 +52,6 @@ class LoginViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
             
-            // Panggil Repository asli
             val result = authRepository.login(_username.value, _password.value)
             
             result.onSuccess {
@@ -61,10 +61,9 @@ class LoginViewModel @Inject constructor(
             }
             _isLoading.value = false
         }
-    }    
-
+    }
+    
     fun loginWithBiometric() {
-        // TODO: Implement biometric authentication
         viewModelScope.launch {
             _isLoading.value = true
             kotlinx.coroutines.delay(1000)
