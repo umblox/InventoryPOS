@@ -106,7 +106,7 @@ private fun TopProductItem(product: TopProduct, maxSales: Int) {
         }
         Spacer(modifier = Modifier.height(4.dp))
         LinearProgressIndicator(
-            progress = { product.sales.toFloat() / maxSales },
+            progress = product.sales.toFloat() / maxSales,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
