@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.inventorypos.presentation.components.common.CustomButton
+import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
 
 @Composable
