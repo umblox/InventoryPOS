@@ -8,11 +8,13 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor() : ViewModel() {
-    private val _user = MutableStateFlow<User?>(User(1, "admin", "Administrator", "admin@pos.com", null, "SUPER_ADMIN"))
-    val user: StateFlow<User?> = _user
-
+class ProfileViewModel @Inject constructor(
+    private val authRepository: com.inventorypos.domain.repository.AuthRepository
+) : ViewModel() {
+    
     fun logout() {
-        // TODO: Clear session and navigate to login
+        viewModelScope.launch {
+            authRepository.logout()
+        }
     }
 }
