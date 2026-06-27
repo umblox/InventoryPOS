@@ -17,6 +17,21 @@ import com.inventorypos.presentation.theme.*
 import com.inventorypos.utils.CurrencyFormatter
 
 @Composable
+fun DetailCard(title: String, value: String) {
+    androidx.compose.material3.Card(
+        modifier = androidx.compose.ui.Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        androidx.compose.foundation.layout.Column(modifier = androidx.compose.ui.Modifier.padding(16.dp)) {
+            androidx.compose.material3.Text(text = title, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+            androidx.compose.material3.Text(text = value, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
 fun CustomerDetailScreen(
     navController: NavController,
     customerId: Long,
