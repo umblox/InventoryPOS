@@ -93,4 +93,14 @@ sealed class Screen(val route: String) {
     object About : Screen("about")
     object ChangePassword : Screen("change_password")
     object Profile : Screen("profile")
+
+    // Supplier
+    object SupplierList : Screen("supplier_list")
+    object SupplierAdd : Screen("supplier_add")
+    object SupplierDetail : Screen("supplier_detail/{supplierId}") {
+        fun createRoute(supplierId: Long) = "supplier_detail/$supplierId"
+    }
+    object SupplierEdit : Screen("supplier_edit/{supplierId}") {
+        fun createRoute(supplierId: Long) = "supplier_edit/$supplierId"
+    }
 }
