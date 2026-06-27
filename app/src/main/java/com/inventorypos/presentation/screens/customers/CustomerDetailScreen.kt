@@ -17,16 +17,34 @@ import com.inventorypos.presentation.theme.*
 import com.inventorypos.utils.CurrencyFormatter
 
 @Composable
-fun DetailCard(title: String, value: String) {
+fun DetailCard(
+    title: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null // Menambahkan ikon opsional
+) {
     androidx.compose.material3.Card(
         modifier = androidx.compose.ui.Modifier.fillMaxWidth().padding(vertical = 4.dp),
         colors = androidx.compose.material3.CardDefaults.cardColors(
             containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
-        androidx.compose.foundation.layout.Column(modifier = androidx.compose.ui.Modifier.padding(16.dp)) {
-            androidx.compose.material3.Text(text = title, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
-            androidx.compose.material3.Text(text = value, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+        androidx.compose.foundation.layout.Row(
+            modifier = androidx.compose.ui.Modifier.padding(16.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                androidx.compose.material3.Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = com.inventorypos.presentation.theme.PremiumGold,
+                    modifier = androidx.compose.ui.Modifier.size(24.dp)
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.width(16.dp))
+            }
+            androidx.compose.foundation.layout.Column {
+                androidx.compose.material3.Text(text = title, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+                androidx.compose.material3.Text(text = value, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }
