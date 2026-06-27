@@ -15,9 +15,9 @@ import com.inventorypos.presentation.theme.*
 
 @Composable
 fun DetailCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     title: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null // Menambahkan ikon opsional
+    value: String
 ) {
     androidx.compose.material3.Card(
         modifier = androidx.compose.ui.Modifier.fillMaxWidth().padding(vertical = 4.dp),
