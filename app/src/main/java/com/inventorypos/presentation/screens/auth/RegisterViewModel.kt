@@ -2,6 +2,7 @@ package com.inventorypos.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +10,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor() : ViewModel() {
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
     
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName
@@ -52,6 +55,8 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
         
         viewModelScope.launch {
             _isLoading.value = true
+            _error.value = null
+            
             val result = authRepository.register(_fullName.value, _username.value, _password.value)
             
             result.onSuccess {
