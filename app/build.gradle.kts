@@ -40,7 +40,7 @@ android {
     kotlinOptions { 
         jvmTarget = "17" 
         freeCompilerArgs = freeCompilerArgs + "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
-}
+    }
     
     buildFeatures {
         compose = true
@@ -58,22 +58,18 @@ android {
     }
 }
 
-// HAPUS BLOCK REPOSITORIES INI - TIDAK BOLEH ADA DI SINI
-// repositories {
-//     google()
-//     mavenCentral()
-//     maven { url = uri("https://jitpack.io") }
-// }
-
 dependencies {
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
     
-    // Compose
+    // Compose BOM (Bill of Materials)
     val composeBom = platform("androidx.compose:compose-bom:2023.10.01")
     implementation(composeBom)
+    androidTestImplementation(composeBom) // PERBAIKAN: BOM wajib dimasukkan ke androidTest
+    debugImplementation(composeBom)       // PERBAIKAN: BOM wajib dimasukkan ke debug
+    
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -140,6 +136,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    
+    // Error berasal dari baris ini karena sebelumnya sistem tidak tahu versinya
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
