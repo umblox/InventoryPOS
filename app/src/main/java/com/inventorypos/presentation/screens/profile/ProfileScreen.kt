@@ -19,28 +19,21 @@ fun DetailCard(
     title: String,
     value: String
 ) {
-    androidx.compose.material3.Card(
-        modifier = androidx.compose.ui.Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
-        )
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface)
     ) {
-        androidx.compose.foundation.layout.Row(
-            modifier = androidx.compose.ui.Modifier.padding(16.dp),
+        Row(
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             if (icon != null) {
-                androidx.compose.material3.Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = com.inventorypos.presentation.theme.PremiumGold,
-                    modifier = androidx.compose.ui.Modifier.size(24.dp)
-                )
-                androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.width(16.dp))
+                Icon(imageVector = icon, contentDescription = null, tint = PremiumGold, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(16.dp))
             }
-            androidx.compose.foundation.layout.Column {
-                androidx.compose.material3.Text(text = title, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
-                androidx.compose.material3.Text(text = value, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+            Column {
+                Text(text = title, style = MaterialTheme.typography.labelMedium, color = PremiumTextSecondary)
+                Text(text = value, style = MaterialTheme.typography.bodyLarge, color = PremiumTextPrimary)
             }
         }
     }
@@ -51,50 +44,36 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    // Memasang user dummy (Administrator / Pemilik) secara langsung
-    // Password "123456" sudah di-encode ke bentuk MD5
-    val dummyUser = com.inventorypos.data.local.entity.UserEntity(
-        id = 1L,
-        username = "administrator",
-        passwordHash = "e10adc3949ba59abbe56e057f20f883e", 
-        fullName = "Administrator (Owner)",
-        role = com.inventorypos.data.local.entity.UserRole.SUPER_ADMIN,
-        isActive = true,
-        createdAt = java.util.Date()
-    )
+    // Tarik data asli dari ViewModel (BUKAN DUMMY LAGI)
+    val user by viewModel.user.collectAsState()
 
     Scaffold(
         topBar = {
-            CustomTopBar(
-                title = "My Profile",
-                subtitle = "Account settings",
-                onBackClick = { navController.popBackStack() }
-            )
+            CustomTopBar(title = "My Profile", subtitle = "Account settings", onBackClick = { navController.popBackStack() })
         },
         containerColor = PremiumDarkBackground
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            if (user != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface)
                 ) {
-                    DetailCard(Icons.Default.Person, "Name", dummyUser.fullName)
-                    DetailCard(Icons.Default.AccountCircle, "Username", dummyUser.username)
-                    DetailCard(Icons.Default.Security, "Role", dummyUser.role.name) // .name untuk Enum
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        DetailCard(Icons.Default.Person, "Name", user!!.fullName)
+                        DetailCard(Icons.Default.AccountCircle, "Username", user!!.username)
+                        DetailCard(Icons.Default.Security, "Role", user!!.role.name)
+                    }
                 }
+            } else {
+                CircularProgressIndicator(color = PremiumGold) // Loading jika data belum masuk
             }
 
             CustomButton(
@@ -104,10 +83,15 @@ fun ProfileScreen(
                 icon = Icons.Default.Lock
             )
 
-            // Asumsi Anda punya komponen CustomOutlinedButton, jika error, kita bisa ganti dengan OutlinedButton bawaan
             CustomOutlinedButton(
                 text = "Logout",
-                onClick = { viewModel.logout() },
+                onClick = { 
+                    viewModel.logout() 
+                    // PERBAIKAN LOGOUT: Navigasi ke Login dan hapus semua history layar sebelumnya
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 icon = Icons.Default.Logout
             )
