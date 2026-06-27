@@ -30,13 +30,6 @@ object AppModule {
     fun provideCategoryRepository(categoryDao: CategoryDao): CategoryRepository {
         return CategoryRepositoryImpl(categoryDao)
     }
-        // Tambahkan 2 fungsi ini di dalam AppModule:
-    
-    @Provides
-    @Singleton
-    fun provideUserDao(appDatabase: com.inventorypos.data.local.database.AppDatabase): com.inventorypos.data.local.dao.UserDao {
-        return appDatabase.userDao()
-    }
 
     @Provides
     @Singleton
