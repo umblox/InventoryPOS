@@ -230,12 +230,12 @@ fun SummaryCard(
     onClick: (() -> Unit)? = null
 ) {
     Card(
-        onClick = { onClick?.invoke() },
-        modifier = modifier,
+        // PERUBAHAN DI BARIS INI:
+        modifier = if (onClick != null) modifier.clickable { onClick() } else modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+    ) { 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -334,8 +334,8 @@ fun QuickActionButton(
     onClick: () -> Unit
 ) {
     Card(
-        onClick = onClick,
-        modifier = modifier,
+        // PERUBAHAN DI BARIS INI:
+        modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
