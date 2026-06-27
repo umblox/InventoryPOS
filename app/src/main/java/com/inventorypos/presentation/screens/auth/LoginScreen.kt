@@ -41,9 +41,11 @@ fun LoginScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
+    // State untuk memunculkan Pop-up Lupa Password
+    var showForgotDialog by remember { mutableStateOf(false) }
+    
     val keyboardController = LocalSoftwareKeyboardController.current
     
-    // Logika: Jika sukses login, masuk ke Dashboard dan hapus history Login
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             navController.navigate(Screen.Dashboard.route) {
@@ -53,173 +55,95 @@ fun LoginScreen(
     }
     
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PremiumDarkBackground)
+        modifier = Modifier.fillMaxSize().background(PremiumDarkBackground)
     ) {
-        // Background decoration (Desain Asli Anda)
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
+                .fillMaxWidth().height(300.dp)
                 .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
-                .background(
-                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(
-                            PremiumGold.copy(alpha = 0.15f),
-                            PremiumDarkBackground
-                        )
-                    )
-                )
+                .background(brush = androidx.compose.ui.graphics.Brush.verticalGradient(colors = listOf(PremiumGold.copy(alpha = 0.15f), PremiumDarkBackground)))
         )
         
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(80.dp))
             
-            // Logo
             Box(
-                modifier = Modifier
-                    .size(90.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(PremiumGold.copy(alpha = 0.2f)),
+                modifier = Modifier.size(90.dp).clip(RoundedCornerShape(24.dp)).background(PremiumGold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Store,
-                    contentDescription = "Logo",
-                    tint = PremiumGold,
-                    modifier = Modifier.size(44.dp)
-                )
+                Icon(Icons.Default.Store, contentDescription = "Logo", tint = PremiumGold, modifier = Modifier.size(44.dp))
             }
             
             Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                text = "Welcome Back",
-                style = MaterialTheme.typography.headlineMedium,
-                color = PremiumTextPrimary,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Text(
-                text = "Sign in to manage your business",
-                style = MaterialTheme.typography.bodyMedium,
-                color = PremiumTextMuted
-            )
-            
+            Text("Welcome Back", style = MaterialTheme.typography.headlineMedium, color = PremiumTextPrimary, fontWeight = FontWeight.Bold)
+            Text("Sign in to manage your business", style = MaterialTheme.typography.bodyMedium, color = PremiumTextMuted)
             Spacer(modifier = Modifier.height(40.dp))
             
-            // Login Form (Desain Card Asli Anda)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     CustomTextField(
-                        value = username,
-                        onValueChange = viewModel::onUsernameChange,
-                        label = "Username",
-                        placeholder = "Enter your username",
-                        leadingIcon = Icons.Default.Person,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next
-                        )
+                        value = username, onValueChange = viewModel::onUsernameChange, label = "Username",
+                        leadingIcon = Icons.Default.Person, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                     
                     CustomTextField(
-                        value = password,
-                        onValueChange = viewModel::onPasswordChange,
-                        label = "Password",
-                        placeholder = "Enter your password",
-                        leadingIcon = Icons.Default.Lock,
-                        isPassword = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                keyboardController?.hide()
-                                viewModel.login()
-                            }
-                        )
+                        value = password, onValueChange = viewModel::onPasswordChange, label = "Password",
+                        leadingIcon = Icons.Default.Lock, isPassword = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { keyboardController?.hide(); viewModel.login() })
                     )
 
-                    // FITUR BARU: Tombol Lupa Password yang diletakkan rapi di dalam Card
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
+                    // PERBAIKAN: Tombol Lupa Password sekarang membuka Dialog, bukan pindah halaman
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Text(
-                            text = "Forgot Password?",
-                            color = PremiumAccent,
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier
-                                .clickable { navController.navigate(Screen.ChangePassword.route) }
-                                .padding(vertical = 4.dp)
+                            text = "Forgot Password?", color = PremiumAccent, style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.clickable { showForgotDialog = true }.padding(vertical = 4.dp)
                         )
                     }
                     
-                    // Error message dengan animasi
                     AnimatedVisibility(visible = error != null) {
-                        Text(
-                            text = error ?: "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PremiumError,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Text(text = error ?: "", style = MaterialTheme.typography.bodySmall, color = PremiumError, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                     
-                    // Login Button
                     CustomButton(
-                        text = "Sign In",
-                        onClick = {
-                            keyboardController?.hide()
-                            viewModel.login()
-                        },
-                        isLoading = isLoading,
-                        modifier = Modifier.fillMaxWidth()
+                        text = "Sign In", onClick = { keyboardController?.hide(); viewModel.login() },
+                        isLoading = isLoading, modifier = Modifier.fillMaxWidth()
                     )
-                    
-                    // Fitur Sidik Jari Dihapus sesuai keputusan arsitektur POS yang logis
                 }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Register link
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Don't have an account?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PremiumTextMuted
-                )
-                TextButton(
-                    onClick = { navController.navigate(Screen.Register.route) },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = PremiumGold
-                    )
-                ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Don't have an account?", style = MaterialTheme.typography.bodyMedium, color = PremiumTextMuted)
+                TextButton(onClick = { navController.navigate(Screen.Register.route) }, colors = ButtonDefaults.textButtonColors(contentColor = PremiumGold)) {
                     Text("Sign Up", fontWeight = FontWeight.Bold)
                 }
             }
-            
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        // Kotak Dialog Lupa Password
+        if (showForgotDialog) {
+            AlertDialog(
+                onDismissRequest = { showForgotDialog = false },
+                containerColor = PremiumDarkSurface,
+                title = { Text(text = "Lupa Password?", color = PremiumGold, fontWeight = FontWeight.Bold) },
+                text = { Text(text = "Untuk alasan keamanan, mohon hubungi Manager atau Administrator toko Anda untuk mereset password akun Anda melalui menu Manajemen User.", color = PremiumTextPrimary) },
+                confirmButton = {
+                    TextButton(onClick = { showForgotDialog = false }) {
+                        Text("Saya Mengerti", color = PremiumAccent, fontWeight = FontWeight.Bold)
+                    }
+                }
+            )
         }
     }
 }
