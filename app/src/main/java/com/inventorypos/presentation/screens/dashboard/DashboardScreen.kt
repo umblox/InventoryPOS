@@ -157,8 +157,9 @@ fun DashboardScreen(
             item {
                 TopProductsCard()
             }
-            
+            item {
             Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
 }
