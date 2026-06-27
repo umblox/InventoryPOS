@@ -52,16 +52,15 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
         
         viewModelScope.launch {
             _isLoading.value = true
-            _error.value = null
+            val result = authRepository.register(_fullName.value, _username.value, _password.value)
             
-            try {
-                kotlinx.coroutines.delay(1500)
+            result.onSuccess {
                 _isSuccess.value = true
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Registration failed"
-            } finally {
-                _isLoading.value = false
+            }.onFailure { e ->
+                _error.value = e.message
             }
+            _isLoading.value = false
         }
     }
+}
 }
