@@ -33,6 +33,11 @@ fun ProductEditScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
+    
+    // PERBAIKAN 1: Memantau nilai 'name' menggunakan collectAsState
+    val name by viewModel.name.collectAsState()
+    
+    // Memantau nilai 'error' (Untuk menyelesaikan warning "Variable 'error' is never used")
     val error by viewModel.error.collectAsState()
     
     LaunchedEffect(isSuccess) {
@@ -77,14 +82,25 @@ fun ProductEditScreen(
                         title = "Basic Information"
                     )
                     
+                    // PERBAIKAN 2: Gunakan 'name' yang sudah di-collect, BUKAN viewModel.name.value
                     CustomTextField(
-                        value = viewModel.name.value,
+                        value = name,
                         onValueChange = viewModel::onNameChange,
                         label = "Product Name",
                         leadingIcon = Icons.Default.Label
                     )
                     
                     // ... (same fields as Add, pre-filled)
+                    
+                    // PERBAIKAN 3: Menampilkan error jika ada, agar variabel error terpakai
+                    if (error != null) {
+                        Text(
+                            text = error!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PremiumError,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
