@@ -59,6 +59,22 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun resetPassword(username: String, newPassword: String): Result<Unit> {
+        return try {
+            val user = userDao.getByUsername(username)
+            if (user != null) {
+                // Update password
+                val updatedUser = user.copy(passwordHash = newPassword)
+                userDao.update(updatedUser)
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("User tidak ditemukan"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+        }
+        
     override suspend fun logout() {
         authPreferences.clearSession()
     }
