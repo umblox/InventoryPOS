@@ -3,6 +3,7 @@ package com.inventorypos.presentation.screens.auth
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,10 +40,10 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
-    val isBiometricAvailable by viewModel.isBiometricAvailable.collectAsState()
     
     val keyboardController = LocalSoftwareKeyboardController.current
     
+    // Logika: Jika sukses login, masuk ke Dashboard dan hapus history Login
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             navController.navigate(Screen.Dashboard.route) {
@@ -56,7 +57,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(PremiumDarkBackground)
     ) {
-        // Background decoration
+        // Background decoration (Desain Asli Anda)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -114,7 +115,7 @@ fun LoginScreen(
             
             Spacer(modifier = Modifier.height(40.dp))
             
-            // Login Form
+            // Login Form (Desain Card Asli Anda)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -154,8 +155,23 @@ fun LoginScreen(
                             }
                         )
                     )
+
+                    // FITUR BARU: Tombol Lupa Password yang diletakkan rapi di dalam Card
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = "Forgot Password?",
+                            color = PremiumAccent,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier
+                                .clickable { navController.navigate(Screen.ChangePassword.route) }
+                                .padding(vertical = 4.dp)
+                        )
+                    }
                     
-                    // Error message
+                    // Error message dengan animasi
                     AnimatedVisibility(visible = error != null) {
                         Text(
                             text = error ?: "",
@@ -177,28 +193,7 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    // Biometric Login
-                    if (isBiometricAvailable) {
-                        TextButton(
-                            onClick = { viewModel.loginWithBiometric() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = PremiumGold
-                            )
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.Fingerprint,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text("Use Fingerprint")
-                            }
-                        }
-                    }
+                    // Fitur Sidik Jari Dihapus sesuai keputusan arsitektur POS yang logis
                 }
             }
             
@@ -220,7 +215,7 @@ fun LoginScreen(
                         contentColor = PremiumGold
                     )
                 ) {
-                    Text("Sign Up")
+                    Text("Sign Up", fontWeight = FontWeight.Bold)
                 }
             }
             
