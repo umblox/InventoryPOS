@@ -51,7 +51,17 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val user by viewModel.user.collectAsState()
+    // Memasang user dummy (Administrator / Pemilik) secara langsung
+    // Password "123456" sudah di-encode ke bentuk MD5
+    val dummyUser = com.inventorypos.data.local.entity.UserEntity(
+        id = 1L,
+        username = "administrator",
+        passwordHash = "e10adc3949ba59abbe56e057f20f883e", 
+        fullName = "Administrator (Owner)",
+        role = com.inventorypos.data.local.entity.UserRole.SUPER_ADMIN,
+        isActive = true,
+        createdAt = java.util.Date()
+    )
 
     Scaffold(
         topBar = {
@@ -81,9 +91,9 @@ fun ProfileScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    DetailCard(Icons.Default.Person, "Name", user?.fullName ?: "-")
-                    DetailCard(Icons.Default.AccountCircle, "Username", user?.username ?: "-")
-                    DetailCard(Icons.Default.Security, "Role", user?.role ?: "-")
+                    DetailCard(Icons.Default.Person, "Name", dummyUser.fullName)
+                    DetailCard(Icons.Default.AccountCircle, "Username", dummyUser.username)
+                    DetailCard(Icons.Default.Security, "Role", dummyUser.role.name) // .name untuk Enum
                 }
             }
 
@@ -94,6 +104,7 @@ fun ProfileScreen(
                 icon = Icons.Default.Lock
             )
 
+            // Asumsi Anda punya komponen CustomOutlinedButton, jika error, kita bisa ganti dengan OutlinedButton bawaan
             CustomOutlinedButton(
                 text = "Logout",
                 onClick = { viewModel.logout() },
@@ -101,19 +112,5 @@ fun ProfileScreen(
                 icon = Icons.Default.Logout
             )
         }
-        @Composable
-fun DetailCard(title: String, value: String) {
-    androidx.compose.material3.Card(
-        modifier = androidx.compose.ui.Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        androidx.compose.foundation.layout.Column(modifier = androidx.compose.ui.Modifier.padding(16.dp)) {
-            androidx.compose.material3.Text(text = title, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
-            androidx.compose.material3.Text(text = value, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
-        }
-    } 
-}
     }
 }
