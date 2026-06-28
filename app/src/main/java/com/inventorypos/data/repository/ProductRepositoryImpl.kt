@@ -1,4 +1,4 @@
-package com.inventorypos.domain.repository
+package com.inventorypos.data.repository
 
 import com.inventorypos.data.local.dao.ProductDao
 import com.inventorypos.data.local.entity.ProductEntity
