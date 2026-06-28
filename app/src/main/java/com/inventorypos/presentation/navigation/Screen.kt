@@ -35,6 +35,9 @@ sealed class Screen(val route: String) {
     object CategoryDelete : Screen("category_delete/{categoryId}") {
         fun createRoute(categoryId: Long) = "category_delete/$categoryId"
     }
+    object CategoryDetail : Screen("category_detail/{categoryId}") {
+        fun createRoute(categoryId: Long) = "category_detail/$categoryId"
+    }
     
     // Stock Screens
     object StockList : Screen("stock_list")
