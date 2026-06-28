@@ -190,7 +190,7 @@ fun QuickActionsPanel(
                 QuickActionButton(Icons.Default.PointOfSale, "New Sale", PremiumGold, Modifier.weight(1f)) { navController.navigate(Screen.POS.route) }
             }
             if (canManageProducts) {
-                QuickActionButton(Icons.Default.Add, "Add Product", PremiumAccent, Modifier.weight(1f)) { navController.navigate(Screen.ProductAdd.route) }
+                QuickActionButton(Icons.Default.Inventory, "Inventory", PremiumAccent, Modifier.weight(1f)) { navController.navigate(Screen.Inventory.route) }
             }
             if (canManageStock) {
                 QuickActionButton(Icons.Default.Inventory, "Stock In", PremiumInfo, Modifier.weight(1f)) { navController.navigate(Screen.StockIn.route) }
