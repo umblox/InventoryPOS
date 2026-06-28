@@ -130,4 +130,25 @@ class UserEditViewModel @Inject constructor(
             }
         }
     }
+        // FUNGSI BARU: Menonaktifkan akun (Soft Delete) untuk karyawan resign
+    fun deactivateUser(userId: Long) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val user = userDao.getById(userId)
+                if (user != null && userId != 1L) { // Proteksi: ID 1 tidak boleh dihapus
+                    val deactivatedUser = user.copy(isActive = false)
+                    userDao.update(deactivatedUser)
+                    _isSuccess.value = true
+                } else {
+                    _error.value = "Gagal menonaktifkan akun. Akun utama tidak bisa dihapus."
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Terjadi kesalahan"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }
