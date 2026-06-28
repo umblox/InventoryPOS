@@ -67,11 +67,18 @@ fun ProductListScreen(
         ) {
             if (isLoading) {
                 LoadingIndicator()
-            } else if (products.isEmpty()) {
+            } else if (products.isEmpty() && searchQuery.isBlank()) {
                 EmptyState(
                     icon = Icons.Default.Inventory,
                     title = "No Products Yet",
                     message = "Add your first product to get started"
+                )
+            } else if (products.isEmpty() && searchQuery.isNotBlank()) {
+                // Menambahkan state khusus jika pencarian tidak ditemukan
+                EmptyState(
+                    icon = Icons.Default.SearchOff,
+                    title = "Not Found",
+                    message = "No product matches \"$searchQuery\""
                 )
             } else {
                 LazyColumn(
@@ -84,7 +91,7 @@ fun ProductListScreen(
                         CustomTextField(
                             value = searchQuery,
                             onValueChange = viewModel::onSearchQueryChange,
-                            placeholder = "Search products...",
+                            placeholder = "Search products by name or SKU...",
                             leadingIcon = Icons.Default.Search,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -95,15 +102,9 @@ fun ProductListScreen(
                     items(products, key = { it.id }) { product ->
                         ProductCard(
                             product = product,
-                            onClick = {
-                                navController.navigate(Screen.ProductDetail.createRoute(product.id))
-                            },
-                            onEdit = {
-                                navController.navigate(Screen.ProductEdit.createRoute(product.id))
-                            },
-                            onDelete = {
-                                navController.navigate(Screen.ProductDelete.createRoute(product.id))
-                            }
+                            onClick = { navController.navigate(Screen.ProductDetail.createRoute(product.id)) },
+                            onEdit = { navController.navigate(Screen.ProductEdit.createRoute(product.id)) },
+                            onDelete = { navController.navigate(Screen.ProductDelete.createRoute(product.id)) }
                         )
                     }
                 }
@@ -114,7 +115,7 @@ fun ProductListScreen(
 
 @Composable
 fun ProductCard(
-    product: Product, // Domain model
+    product: Product,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -125,19 +126,13 @@ fun ProductCard(
             .fillMaxWidth()
             .heightIn(min = 100.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = PremiumDarkSurface
-        ),
+        colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(CardGradientStart, CardGradientEnd)
-                    )
-                )
+                .background(Brush.horizontalGradient(colors = listOf(CardGradientStart, CardGradientEnd)))
                 .padding(16.dp)
         ) {
             Row(
@@ -145,9 +140,7 @@ fun ProductCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -155,29 +148,31 @@ fun ProductCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    // PERBAIKAN: Menampilkan SKU sekaligus Nama Kategori di bawah nama produk
+                    val catName = product.categoryName ?: "Uncategorized"
                     Text(
-                        text = "SKU: ${product.sku}",
+                        text = "SKU: ${product.sku}  •  $catName",
                         style = MaterialTheme.typography.bodySmall,
                         color = PremiumTextMuted
                     )
+                    
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Price badge
                         Surface(
                             color = PremiumGold.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "Rp ${product.sellPrice}",
+                                text = "Rp ${String.format("%,.0f", product.sellPrice)}",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = PremiumGold,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                             )
                         }
-                        // Stock badge
+                        
                         val stockColor = when {
                             product.stock <= 0 -> PremiumError
                             product.stock <= product.minStock -> PremiumWarning
@@ -188,7 +183,7 @@ fun ProductCard(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "${product.stock} in stock",
+                                text = "${product.stock} ${product.unit}",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = stockColor,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
@@ -197,39 +192,21 @@ fun ProductCard(
                     }
                 }
                 
-                // Action buttons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(
                         onClick = onEdit,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(PremiumInfo.copy(alpha = 0.15f))
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(PremiumInfo.copy(alpha = 0.15f))
                     ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            "Edit",
-                            tint = PremiumInfo,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(Icons.Default.Edit, "Edit", tint = PremiumInfo, modifier = Modifier.size(18.dp))
                     }
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(PremiumError.copy(alpha = 0.15f))
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(PremiumError.copy(alpha = 0.15f))
                     ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            "Delete",
-                            tint = PremiumError,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(Icons.Default.Delete, "Delete", tint = PremiumError, modifier = Modifier.size(18.dp))
                     }
                 }
             }
         }
     }
 }
-
