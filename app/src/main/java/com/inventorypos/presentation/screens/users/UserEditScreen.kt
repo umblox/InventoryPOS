@@ -140,4 +140,5 @@ fun UserEditScreen(
                     Text("Deactivate / Resign Account")
                 }
             }
+        }
 }
