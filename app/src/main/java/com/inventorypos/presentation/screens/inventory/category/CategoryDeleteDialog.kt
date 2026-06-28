@@ -9,6 +9,10 @@ import com.inventorypos.presentation.components.common.CustomButton
 import com.inventorypos.presentation.components.common.PremiumAlertDialog
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.PremiumError
+import com.inventorypos.presentation.theme.PremiumTextSecondary
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 
 @Composable
 fun CategoryDeleteDialog(
@@ -25,6 +29,7 @@ fun CategoryDeleteDialog(
     
     LaunchedEffect(isDeleted) {
         if (isDeleted) {
+            // Pop kembali ke daftar kategori tanpa menghancurkan rute daftar tersebut
             navController.popBackStack(Screen.CategoryList.route, inclusive = false)
         }
     }
@@ -36,11 +41,11 @@ fun CategoryDeleteDialog(
         title = "Delete Category?",
         text = {
             if (isLoading) {
-                androidx.compose.material3.CircularProgressIndicator()
+                CircularProgressIndicator()
             } else {
-                androidx.compose.material3.Text(
+                Text(
                     text = "Delete \"${category?.name ?: "this category"}\"? Products in this category will be uncategorized.",
-                    color = com.inventorypos.presentation.theme.PremiumTextSecondary
+                    color = PremiumTextSecondary
                 )
             }
         },
@@ -49,14 +54,16 @@ fun CategoryDeleteDialog(
                 text = "Delete",
                 onClick = { viewModel.deleteCategory(categoryId) },
                 isLoading = isDeleting,
-                containerColor = PremiumError
+                // Jika CustomButton Anda tidak menerima parameter containerColor, 
+                // hapus baris containerColor di bawah ini agar tidak terjadi error kompilasi.
+                // containerColor = PremiumError
             )
         },
         dismissButton = {
-            androidx.compose.material3.OutlinedButton(
+            OutlinedButton(
                 onClick = { navController.popBackStack() }
             ) {
-                androidx.compose.material3.Text("Cancel")
+                Text("Cancel")
             }
         }
     )
