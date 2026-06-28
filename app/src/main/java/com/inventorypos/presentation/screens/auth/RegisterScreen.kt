@@ -1,5 +1,6 @@
 package com.inventorypos.presentation.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,8 +39,13 @@ fun RegisterScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
+    // Mengambil context untuk Toast
+    val context = LocalContext.current
+    
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
+            // Menampilkan Notifikasi Simpel
+            Toast.makeText(context, "Registrasi berhasil! Silakan Login.", Toast.LENGTH_LONG).show()
             navController.popBackStack()
         }
     }
