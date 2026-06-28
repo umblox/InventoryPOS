@@ -1,5 +1,6 @@
 package com.inventorypos.presentation.screens.users
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,9 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.inventorypos.data.local.entity.UserRole
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAddScreen(
     navController: NavController,
@@ -26,6 +29,8 @@ fun UserAddScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
+
+    var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(isSuccess) { if (isSuccess) navController.popBackStack() }
 
@@ -72,14 +77,43 @@ fun UserAddScreen(
                 isPassword = true
             )
 
-            // Role dropdown (simplified)
-            CustomTextField(
-                value = role,
-                onValueChange = viewModel::onRoleChange,
-                label = "Role *",
-                placeholder = "CASHIER, ADMIN, etc.",
-                leadingIcon = Icons.Default.Security
-            )
+            // DROPDOWN MENU ROLE
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = role,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Role *", color = PremiumTextSecondary) },
+                    leadingIcon = { Icon(Icons.Default.Security, null, tint = PremiumGold) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PremiumGold,
+                        unfocusedBorderColor = PremiumDarkSurface,
+                        focusedTextColor = PremiumTextPrimary,
+                        unfocusedTextColor = PremiumTextPrimary
+                    )
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(PremiumDarkSurface)
+                ) {
+                    UserRole.values().forEach { roleEnum ->
+                        DropdownMenuItem(
+                            text = { Text(roleEnum.name, color = PremiumTextPrimary) },
+                            onClick = {
+                                viewModel.onRoleChange(roleEnum.name)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             if (error != null) {
                 Text(text = error!!, color = PremiumError, style = MaterialTheme.typography.bodySmall)
