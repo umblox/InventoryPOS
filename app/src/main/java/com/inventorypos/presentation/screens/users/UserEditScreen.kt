@@ -45,35 +45,74 @@ fun UserEditScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomTextField(value = fullName, onValueChange = viewModel::onFullNameChange, label = "Full Name", leadingIcon = Icons.Default.Person)
-            CustomTextField(value = username, onValueChange = viewModel::onUsernameChange, label = "Username", leadingIcon = Icons.Default.AccountCircle)
+            
+            // PERBAIKAN 1: Mengunci kolom Username agar Read-Only menggunakan OutlinedTextField bertema premium
+            OutlinedTextField(
+                value = username,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Username (Tidak dapat diubah)", color = PremiumTextMuted) },
+                leadingIcon = { Icon(Icons.Default.AccountCircle, null, tint = PremiumTextMuted) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PremiumDarkSurface,
+                    unfocusedBorderColor = PremiumDarkSurface,
+                    focusedTextColor = PremiumTextMuted,
+                    unfocusedTextColor = PremiumTextMuted,
+                    containerColor = PremiumDarkSurface.copy(alpha = 0.5f)
+                )
+            )
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
+            // PERBAIKAN 2: Proteksi Super Admin Utama (ID #1). Jika ID = 1, Dropdown dikunci mati.
+            if (userId == 1L) {
                 OutlinedTextField(
-                    value = role,
+                    value = "SUPER_ADMIN",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Role / Jabatan", color = PremiumTextSecondary) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    label = { Text("Role / Jabatan (Owner Mutlak)", color = PremiumTextMuted) },
+                    leadingIcon = { Icon(Icons.Default.Security, null, tint = PremiumTextMuted) },
+                    modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PremiumGold, unfocusedBorderColor = PremiumDarkSurface,
-                        focusedTextColor = PremiumTextPrimary, unfocusedTextColor = PremiumTextPrimary
+                        focusedBorderColor = PremiumDarkSurface,
+                        unfocusedBorderColor = PremiumDarkSurface,
+                        focusedTextColor = PremiumTextMuted,
+                        unfocusedTextColor = PremiumTextMuted,
+                        containerColor = PremiumDarkSurface.copy(alpha = 0.5f)
                     )
                 )
-                
-                ExposedDropdownMenu(
+            } else {
+                // Jika user biasa, tampilkan dropdown pilihan jabatan seperti biasa
+                ExposedDropdownMenuBox(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(PremiumDarkSurface)
+                    onExpandedChange = { expanded = !expanded }
                 ) {
-                    UserRole.values().forEach { roleEnum ->
-                        DropdownMenuItem(
-                            text = { Text(roleEnum.name, color = PremiumTextPrimary) },
-                            onClick = { viewModel.onRoleChange(roleEnum.name); expanded = false }
+                    OutlinedTextField(
+                        value = role,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Role / Jabatan", color = PremiumTextSecondary) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PremiumGold, unfocusedBorderColor = PremiumDarkSurface,
+                            focusedTextColor = PremiumTextPrimary, unfocusedTextColor = PremiumTextPrimary
                         )
+                    )
+                    
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(PremiumDarkSurface)
+                    ) {
+                        UserRole.values().forEach { roleEnum ->
+                            // Super admin bawaan tidak boleh digandakan demi kerapian hirarki
+                            if (roleEnum != UserRole.SUPER_ADMIN) {
+                                DropdownMenuItem(
+                                    text = { Text(roleEnum.name, color = PremiumTextPrimary) },
+                                    onClick = { viewModel.onRoleChange(roleEnum.name); expanded = false }
+                                )
+                            }
+                        }
                     }
                 }
             }
