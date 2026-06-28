@@ -4,7 +4,6 @@ sealed class Screen(val route: String) {
     // Splash & Auth
     object Splash : Screen("splash")
     object Login : Screen("login")
-    object Register : Screen("register")
     
     // Main Bottom Nav
     object Dashboard : Screen("dashboard")
