@@ -41,9 +41,7 @@ fun LoginScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
-    // State untuk memunculkan Pop-up Lupa Password
     var showForgotDialog by remember { mutableStateOf(false) }
-    
     val keyboardController = LocalSoftwareKeyboardController.current
     
     LaunchedEffect(isSuccess) {
@@ -54,12 +52,9 @@ fun LoginScreen(
         }
     }
     
-    Box(
-        modifier = Modifier.fillMaxSize().background(PremiumDarkBackground)
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(PremiumDarkBackground)) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth().height(300.dp)
+            modifier = Modifier.fillMaxWidth().height(300.dp)
                 .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
                 .background(brush = androidx.compose.ui.graphics.Brush.verticalGradient(colors = listOf(PremiumGold.copy(alpha = 0.15f), PremiumDarkBackground)))
         )
@@ -69,13 +64,10 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(80.dp))
-            
             Box(
                 modifier = Modifier.size(90.dp).clip(RoundedCornerShape(24.dp)).background(PremiumGold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Store, contentDescription = "Logo", tint = PremiumGold, modifier = Modifier.size(44.dp))
-            }
+            ) { Icon(Icons.Default.Store, contentDescription = "Logo", tint = PremiumGold, modifier = Modifier.size(44.dp)) }
             
             Spacer(modifier = Modifier.height(24.dp))
             Text("Welcome Back", style = MaterialTheme.typography.headlineMedium, color = PremiumTextPrimary, fontWeight = FontWeight.Bold)
@@ -84,8 +76,7 @@ fun LoginScreen(
             
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
+                shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -93,7 +84,6 @@ fun LoginScreen(
                         value = username, onValueChange = viewModel::onUsernameChange, label = "Username",
                         leadingIcon = Icons.Default.Person, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
-                    
                     CustomTextField(
                         value = password, onValueChange = viewModel::onPasswordChange, label = "Password",
                         leadingIcon = Icons.Default.Lock, isPassword = true,
@@ -101,18 +91,15 @@ fun LoginScreen(
                         keyboardActions = KeyboardActions(onDone = { keyboardController?.hide(); viewModel.login() })
                     )
 
-                    // PERBAIKAN: Tombol Lupa Password sekarang membuka Dialog, bukan pindah halaman
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Text(
                             text = "Forgot Password?", color = PremiumAccent, style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.clickable { showForgotDialog = true }.padding(vertical = 4.dp)
                         )
                     }
-                    
                     AnimatedVisibility(visible = error != null) {
                         Text(text = error ?: "", style = MaterialTheme.typography.bodySmall, color = PremiumError, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
-                    
                     CustomButton(
                         text = "Sign In", onClick = { keyboardController?.hide(); viewModel.login() },
                         isLoading = isLoading, modifier = Modifier.fillMaxWidth()
@@ -120,29 +107,17 @@ fun LoginScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Don't have an account?", style = MaterialTheme.typography.bodyMedium, color = PremiumTextMuted)
-                TextButton(onClick = { navController.navigate(Screen.Register.route) }, colors = ButtonDefaults.textButtonColors(contentColor = PremiumGold)) {
-                    Text("Sign Up", fontWeight = FontWeight.Bold)
-                }
-            }
+            // BLOK REGISTRASI TELAH DIHAPUS DARI SINI
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // Kotak Dialog Lupa Password
         if (showForgotDialog) {
             AlertDialog(
                 onDismissRequest = { showForgotDialog = false },
                 containerColor = PremiumDarkSurface,
                 title = { Text(text = "Lupa Password?", color = PremiumGold, fontWeight = FontWeight.Bold) },
-                text = { Text(text = "Untuk alasan keamanan, mohon hubungi Manager atau Administrator toko Anda untuk mereset password akun Anda melalui menu Manajemen User.", color = PremiumTextPrimary) },
-                confirmButton = {
-                    TextButton(onClick = { showForgotDialog = false }) {
-                        Text("Saya Mengerti", color = PremiumAccent, fontWeight = FontWeight.Bold)
-                    }
-                }
+                text = { Text(text = "Untuk alasan keamanan, mohon hubungi Manager atau Administrator toko Anda untuk mereset password.", color = PremiumTextPrimary) },
+                confirmButton = { TextButton(onClick = { showForgotDialog = false }) { Text("Saya Mengerti", color = PremiumAccent, fontWeight = FontWeight.Bold) } }
             )
         }
     }
