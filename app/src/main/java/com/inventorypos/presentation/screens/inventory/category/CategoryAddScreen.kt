@@ -1,5 +1,6 @@
 package com.inventorypos.presentation.screens.inventory.category
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -25,8 +27,13 @@ fun CategoryAddScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
+    val context = LocalContext.current
+    
     LaunchedEffect(isSuccess) {
-        if (isSuccess) navController.popBackStack()
+        if (isSuccess) {
+            Toast.makeText(context, "Kategori berhasil disimpan!", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+        }
     }
     
     Scaffold(
