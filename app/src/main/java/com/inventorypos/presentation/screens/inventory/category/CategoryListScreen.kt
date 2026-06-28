@@ -64,7 +64,7 @@ fun CategoryListScreen(
                     items(categories) { category ->
                         CategoryCard(
                             category = category,
-                            onClick = { /* Detail */ },
+                            onClick = { navController.navigate(Screen.CategoryDetail.createRoute(category.id)) },
                             onEdit = { navController.navigate(Screen.CategoryEdit.createRoute(category.id)) },
                             onDelete = { navController.navigate(Screen.CategoryDelete.createRoute(category.id)) }
                         )
