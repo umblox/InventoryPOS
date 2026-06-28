@@ -58,8 +58,7 @@ fun UserEditScreen(
                     focusedBorderColor = PremiumDarkSurface,
                     unfocusedBorderColor = PremiumDarkSurface,
                     focusedTextColor = PremiumTextMuted,
-                    unfocusedTextColor = PremiumTextMuted,
-                    containerColor = PremiumDarkSurface.copy(alpha = 0.5f)
+                    unfocusedTextColor = PremiumTextMuted
                 )
             )
 
@@ -76,8 +75,7 @@ fun UserEditScreen(
                         focusedBorderColor = PremiumDarkSurface,
                         unfocusedBorderColor = PremiumDarkSurface,
                         focusedTextColor = PremiumTextMuted,
-                        unfocusedTextColor = PremiumTextMuted,
-                        containerColor = PremiumDarkSurface.copy(alpha = 0.5f)
+                        unfocusedTextColor = PremiumTextMuted
                     )
                 )
             } else {
