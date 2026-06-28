@@ -3,6 +3,7 @@ package com.inventorypos.presentation.screens.inventory.category
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventorypos.domain.model.Category
+import com.inventorypos.domain.repository.CategoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CategoryDeleteViewModel @Inject constructor() : ViewModel() {
+class CategoryDeleteViewModel @Inject constructor(
+    private val categoryRepository: CategoryRepository // Injeksi Repository
+) : ViewModel() {
     
     private val _category = MutableStateFlow<Category?>(null)
     val category: StateFlow<Category?> = _category
@@ -27,18 +30,29 @@ class CategoryDeleteViewModel @Inject constructor() : ViewModel() {
     fun loadCategory(id: Long) {
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(300)
-            _category.value = Category(id, "Food", "Food items")
-            _isLoading.value = false
+            try {
+                // Menarik data kategori asli dari database
+                _category.value = categoryRepository.getCategoryById(id)
+            } catch (e: Exception) {
+                // Tangani error jika diperlukan
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
     
     fun deleteCategory(id: Long) {
         viewModelScope.launch {
             _isDeleting.value = true
-            kotlinx.coroutines.delay(800)
-            _isDeleted.value = true
-            _isDeleting.value = false
+            try {
+                // Mengeksekusi soft delete (isActive = 0) ke database
+                categoryRepository.deleteCategory(id)
+                _isDeleted.value = true
+            } catch (e: Exception) {
+                // Tangani error jika diperlukan
+            } finally {
+                _isDeleting.value = false
+            }
         }
     }
 }
