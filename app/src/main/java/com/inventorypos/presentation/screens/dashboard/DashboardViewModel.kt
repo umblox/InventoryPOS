@@ -3,6 +3,7 @@ package com.inventorypos.presentation.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventorypos.data.local.dao.UserDao
+import com.inventorypos.data.local.dao.UserPermissionDao
 import com.inventorypos.data.local.entity.UserEntity
 import com.inventorypos.data.preferences.AuthPreferences
 import com.inventorypos.domain.repository.ProductRepository
@@ -18,13 +19,17 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val productRepository: ProductRepository,
-    private val authPreferences: AuthPreferences, // Tambahkan injeksi ini
-    private val userDao: UserDao                 // Tambahkan injeksi ini
+    private val authPreferences: AuthPreferences,
+    private val userDao: UserDao,
+    private val userPermissionDao: UserPermissionDao // Injeksi DAO baru
 ) : ViewModel() {
     
-    // VARIABEL BARU: Menyimpan data user yang sedang login
     private val _currentUser = MutableStateFlow<UserEntity?>(null)
     val currentUser: StateFlow<UserEntity?> = _currentUser
+
+    // VARIABEL BARU: Menyimpan daftar teks izin yang diizinkan (isGranted = true)
+    private val _userPermissions = MutableStateFlow<Set<String>>(emptySet())
+    val userPermissions: StateFlow<Set<String>> = _userPermissions
 
     private val _todaySales = MutableStateFlow(0.0)
     val todaySales: StateFlow<Double> = _todaySales
@@ -45,16 +50,20 @@ class DashboardViewModel @Inject constructor(
     val topProducts: StateFlow<List<TopProduct>> = _topProducts
     
     init {
-        loadCurrentUser()
+        loadCurrentUserAndPermissions()
         loadDashboardData()
     }
     
-    // FUNGSI BARU: Menarik profil pengguna aktif
-    private fun loadCurrentUser() {
+    private fun loadCurrentUserAndPermissions() {
         viewModelScope.launch {
             authPreferences.loggedInUserId.collect { userId ->
                 if (userId != -1L) {
-                    _currentUser.value = userDao.getById(userId)
+                    val user = userDao.getById(userId)
+                    _currentUser.value = user
+                    
+                    // Tarik izin fiturnya dari Room
+                    val perms = userPermissionDao.getPermissionsByUserId(userId)
+                    _userPermissions.value = perms.filter { it.isGranted }.map { it.permissionName }.toSet()
                 }
             }
         }
@@ -62,33 +71,19 @@ class DashboardViewModel @Inject constructor(
     
     private fun loadDashboardData() {
         viewModelScope.launch {
-            productRepository.getProductCount().collect { count ->
-                _productCount.value = count
-            }
+            productRepository.getProductCount().collect { count -> _productCount.value = count }
         }
-        
         viewModelScope.launch {
-            productRepository.getLowStockProducts().collect { products ->
-                _lowStockCount.value = products.size
-            }
+            productRepository.getLowStockProducts().collect { products -> _lowStockCount.value = products.size }
         }
         
-        // Dummy data for demo
         _todaySales.value = 2450000.0
         _transactionCount.value = 42
         _recentTransactions.value = listOf(
             RecentTransaction(1, "TRX-001", 150000.0, Date(), "PAID"),
             RecentTransaction(2, "TRX-002", 275000.0, Date(), "PAID"),
-            RecentTransaction(3, "TRX-003", 89000.0, Date(), "PAID"),
-            RecentTransaction(4, "TRX-004", 450000.0, Date(), "PAID"),
-            RecentTransaction(5, "TRX-005", 125000.0, Date(), "PAID")
+            RecentTransaction(3, "TRX-003", 89000.0, Date(), "PAID")
         )
-        _topProducts.value = listOf(
-            TopProduct("Indomie Goreng", 45, 675000.0),
-            TopProduct("Aqua 600ml", 38, 380000.0),
-            TopProduct("Teh Botol", 32, 256000.0),
-            TopProduct("Chitato", 28, 196000.0),
-            TopProduct("Oreo", 25, 175000.0)
-        )
+        _topProducts.value = listOf(TopProduct("Indomie Goreng", 45, 675000.0))
     }
 }
