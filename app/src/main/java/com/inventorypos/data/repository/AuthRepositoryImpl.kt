@@ -29,29 +29,6 @@ class AuthRepositoryImpl(
         }
     }
 
-    override suspend fun register(fullName: String, username: String, password: String): Result<Unit> {
-        return try {
-            val existingUser = userDao.getByUsername(username)
-            if (existingUser != null) {
-                return Result.failure(Exception("Username sudah digunakan!"))
-            }
-
-            val newUser = UserEntity(
-                fullName = fullName,
-                username = username,
-                passwordHash = password,
-                role = UserRole.ADMIN,
-                isActive = true,
-                createdAt = Date()
-            )
-            
-            userDao.insert(newUser)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     override suspend fun resetPassword(username: String, newPassword: String): Result<Unit> {
         return try {
             val user = userDao.getByUsername(username)
