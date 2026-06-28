@@ -104,7 +104,15 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.CategoryList.route) {
             CategoryListScreen(navController)
         }
-        
+
+        composable(
+            route = Screen.CategoryDetail.route,
+            arguments = listOf(navArgument("categoryId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getLong("categoryId") ?: 0L
+            CategoryDetailScreen(navController, categoryId)
+        }
+                
         composable(Screen.CategoryAdd.route) {
             CategoryAddScreen(navController)
         }
