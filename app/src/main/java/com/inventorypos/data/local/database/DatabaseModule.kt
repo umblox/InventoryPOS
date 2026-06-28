@@ -54,6 +54,9 @@ object DatabaseModule {
             
         return dbInstance
     }
+
+    @Provides
+    fun provideUserPermissionDao(db: AppDatabase) = db.userPermissionDao()
     
     @Provides
     fun provideProductDao(db: AppDatabase) = db.productDao()
