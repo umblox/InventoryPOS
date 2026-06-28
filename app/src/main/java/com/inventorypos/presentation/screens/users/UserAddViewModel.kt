@@ -2,6 +2,9 @@ package com.inventorypos.presentation.screens.users
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.dao.UserDao
+import com.inventorypos.data.local.entity.UserEntity
+import com.inventorypos.data.local.entity.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +12,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UserAddViewModel @Inject constructor() : ViewModel() {
+class UserAddViewModel @Inject constructor(
+    private val userDao: UserDao // Injeksi UserDao
+) : ViewModel() {
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName
 
@@ -40,11 +45,36 @@ class UserAddViewModel @Inject constructor() : ViewModel() {
         if (_fullName.value.isBlank()) { _error.value = "Full name is required"; return }
         if (_username.value.isBlank()) { _error.value = "Username is required"; return }
         if (_password.value.length < 6) { _error.value = "Password min 6 characters"; return }
+        
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(800)
-            _isSuccess.value = true
-            _isLoading.value = false
+            _error.value = null
+            try {
+                // Konversi String role ke Enum UserRole
+                val roleEnum = try {
+                    UserRole.valueOf(_role.value)
+                } catch (e: Exception) {
+                    UserRole.CASHIER
+                }
+
+                // Buat entitas user baru
+                val newUser = UserEntity(
+                    fullName = _fullName.value,
+                    username = _username.value,
+                    passwordHash = _password.value,
+                    role = roleEnum,
+                    isActive = true
+                )
+
+                // Simpan ke Database
+                userDao.insert(newUser)
+                
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to save user"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
