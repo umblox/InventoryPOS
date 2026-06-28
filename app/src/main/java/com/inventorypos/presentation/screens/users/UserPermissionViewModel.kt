@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// PENAMBAHAN: Struktur data UI yang dibutuhkan untuk merender daftar permission
+data class Permission(val name: String, val isGranted: Boolean)
+
 @HiltViewModel
 class UserPermissionViewModel @Inject constructor(
     private val userPermissionDao: UserPermissionDao
@@ -24,15 +27,9 @@ class UserPermissionViewModel @Inject constructor(
     private val _isSuccess = MutableStateFlow(false)
     val isSuccess: StateFlow<Boolean> = _isSuccess
 
-    // Standar 7 Fitur POS Anda
     private val defaultPermissionNames = listOf(
-        "View Dashboard",
-        "Manage POS",
-        "Manage Products",
-        "Manage Stock",
-        "View Reports",
-        "Manage Users",
-        "Manage Settings"
+        "View Dashboard", "Manage POS", "Manage Products", 
+        "Manage Stock", "View Reports", "Manage Users", "Manage Settings"
     )
 
     fun loadPermissions(userId: Long) {
@@ -41,17 +38,14 @@ class UserPermissionViewModel @Inject constructor(
             try {
                 val dbPerms = userPermissionDao.getPermissionsByUserId(userId)
                 if (dbPerms.isEmpty()) {
-                    // Jika belum disetting, buat default semua false
                     _permissions.value = defaultPermissionNames.map { Permission(it, false) }
                 } else {
-                    // Sinkronisasi data dari DB ke UI
                     _permissions.value = defaultPermissionNames.map { name ->
                         val found = dbPerms.find { it.permissionName == name }
                         Permission(name, found?.isGranted ?: false)
                     }
                 }
             } catch (e: Exception) {
-                // Handle Error
             } finally {
                 _isLoading.value = false
             }
@@ -70,11 +64,7 @@ class UserPermissionViewModel @Inject constructor(
             try {
                 userPermissionDao.deletePermissionsByUserId(userId)
                 val entities = _permissions.value.map { perm ->
-                    UserPermissionEntity(
-                        userId = userId,
-                        permissionName = perm.name,
-                        isGranted = perm.isGranted
-                    )
+                    UserPermissionEntity(userId = userId, permissionName = perm.name, isGranted = perm.isGranted)
                 }
                 userPermissionDao.insertPermissions(entities)
                 _isSuccess.value = true
