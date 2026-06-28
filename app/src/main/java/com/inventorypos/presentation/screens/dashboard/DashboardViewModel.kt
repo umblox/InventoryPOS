@@ -2,6 +2,9 @@ package com.inventorypos.presentation.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.dao.UserDao
+import com.inventorypos.data.local.entity.UserEntity
+import com.inventorypos.data.preferences.AuthPreferences
 import com.inventorypos.domain.repository.ProductRepository
 import com.inventorypos.presentation.screens.dashboard.widgets.RecentTransaction
 import com.inventorypos.presentation.screens.dashboard.widgets.TopProduct
@@ -14,9 +17,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val authPreferences: AuthPreferences, // Tambahkan injeksi ini
+    private val userDao: UserDao                 // Tambahkan injeksi ini
 ) : ViewModel() {
     
+    // VARIABEL BARU: Menyimpan data user yang sedang login
+    private val _currentUser = MutableStateFlow<UserEntity?>(null)
+    val currentUser: StateFlow<UserEntity?> = _currentUser
+
     private val _todaySales = MutableStateFlow(0.0)
     val todaySales: StateFlow<Double> = _todaySales
     
@@ -36,19 +45,29 @@ class DashboardViewModel @Inject constructor(
     val topProducts: StateFlow<List<TopProduct>> = _topProducts
     
     init {
+        loadCurrentUser()
         loadDashboardData()
+    }
+    
+    // FUNGSI BARU: Menarik profil pengguna aktif
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            authPreferences.loggedInUserId.collect { userId ->
+                if (userId != -1L) {
+                    _currentUser.value = userDao.getById(userId)
+                }
+            }
+        }
     }
     
     private fun loadDashboardData() {
         viewModelScope.launch {
-            // Load product count
             productRepository.getProductCount().collect { count ->
                 _productCount.value = count
             }
         }
         
         viewModelScope.launch {
-            // Load low stock count
             productRepository.getLowStockProducts().collect { products ->
                 _lowStockCount.value = products.size
             }
