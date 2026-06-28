@@ -29,13 +29,16 @@ class CategoryListViewModel @Inject constructor(
     private fun loadCategories() {
         viewModelScope.launch {
             _isLoading.value = true
-            // TODO: Implement repository
-            _categories.value = listOf(
-                Category(1, "Food", "Food items"),
-                Category(2, "Drink", "Beverages"),
-                Category(3, "Snack", "Snacks")
-            )
-            _isLoading.value = false
+            try {
+                // Menyedot data secara reaktif dari database Room
+                categoryRepository.getAllCategories().collect { categoryList ->
+                    _categories.value = categoryList
+                    _isLoading.value = false
+                }
+            } catch (e: Exception) {
+                // Tangani error jika diperlukan, minimal matikan loading
+                _isLoading.value = false
+            }
         }
     }
 }
