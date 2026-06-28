@@ -9,7 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.inventorypos.presentation.screens.auth.LoginScreen
-import com.inventorypos.presentation.screens.auth.RegisterScreen
 import com.inventorypos.presentation.screens.customers.*
 import com.inventorypos.presentation.screens.dashboard.DashboardScreen
 import com.inventorypos.presentation.screens.inventory.*
@@ -41,10 +40,6 @@ fun AppNavigation(navController: NavHostController) {
         
         composable(Screen.Login.route) {
             LoginScreen(navController)
-        }
-        
-        composable(Screen.Register.route) {
-            RegisterScreen(navController)
         }
         
         // === MAIN SCREENS (Bottom Navigation) ===
