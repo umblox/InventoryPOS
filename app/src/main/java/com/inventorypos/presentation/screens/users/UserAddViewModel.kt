@@ -3,7 +3,9 @@ package com.inventorypos.presentation.screens.users
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventorypos.data.local.dao.UserDao
+import com.inventorypos.data.local.dao.UserPermissionDao
 import com.inventorypos.data.local.entity.UserEntity
+import com.inventorypos.data.local.entity.UserPermissionEntity
 import com.inventorypos.data.local.entity.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserAddViewModel @Inject constructor(
-    private val userDao: UserDao // Injeksi UserDao
+    private val userDao: UserDao,
+    private val userPermissionDao: UserPermissionDao // Injeksi DAO Permission
 ) : ViewModel() {
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName
@@ -50,14 +53,16 @@ class UserAddViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
             try {
-                // Konversi String role ke Enum UserRole
-                val roleEnum = try {
-                    UserRole.valueOf(_role.value)
-                } catch (e: Exception) {
-                    UserRole.CASHIER
+                // 1. Cek apakah username sudah ada
+                val existing = userDao.getByUsername(_username.value)
+                if (existing != null) {
+                    _error.value = "Username sudah digunakan!"
+                    return@launch
                 }
 
-                // Buat entitas user baru
+                val roleEnum = try { UserRole.valueOf(_role.value) } catch (e: Exception) { UserRole.CASHIER }
+
+                // 2. Simpan User Baru
                 val newUser = UserEntity(
                     fullName = _fullName.value,
                     username = _username.value,
@@ -65,9 +70,32 @@ class UserAddViewModel @Inject constructor(
                     role = roleEnum,
                     isActive = true
                 )
-
-                // Simpan ke Database
                 userDao.insert(newUser)
+                
+                // 3. SEEDER PERMISSION OTOMATIS: 
+                // Kita tarik ulang ID user yang baru saja dibuat
+                val savedUser = userDao.getByUsername(_username.value)
+                if (savedUser != null) {
+                    val defaultPerms = listOf("View Dashboard", "Manage POS", "Manage Products", "Manage Stock", "View Reports", "Manage Users", "Manage Settings")
+                    
+                    val permissionEntities = defaultPerms.map { permName ->
+                        // Aturan Default: Kasir hanya boleh POS dan Dashboard. Admin boleh yang lain.
+                        val isGrantedByDefault = when (roleEnum) {
+                            UserRole.ADMIN -> true
+                            UserRole.CASHIER -> permName == "Manage POS" || permName == "View Dashboard"
+                            UserRole.WAREHOUSE -> permName == "Manage Stock" || permName == "Manage Products" || permName == "View Dashboard"
+                            else -> false
+                        }
+                        
+                        UserPermissionEntity(
+                            userId = savedUser.id,
+                            permissionName = permName,
+                            isGranted = isGrantedByDefault
+                        )
+                    }
+                    // Simpan izin ke database
+                    userPermissionDao.insertPermissions(permissionEntities)
+                }
                 
                 _isSuccess.value = true
             } catch (e: Exception) {
