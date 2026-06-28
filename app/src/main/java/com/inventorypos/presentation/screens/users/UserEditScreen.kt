@@ -119,7 +119,25 @@ fun UserEditScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            CustomButton(text = "Save Changes", onClick = { viewModel.updateUser(userId) }, isLoading = isSaving, modifier = Modifier.fillMaxWidth())
-        }
-    }
+            CustomButton(
+                text = "Save Changes",
+                onClick = { viewModel.updateUser(userId) },
+                isLoading = isSaving,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // TOMBOL BARU: Hapus/Nonaktifkan Karyawan (Hanya muncul jika bukan Super Admin Utama)
+            if (userId != 1L) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = { viewModel.deactivateUser(userId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PremiumError),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PremiumError)
+                ) {
+                    Icon(Icons.Default.Block, contentDescription = "Deactivate", modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Deactivate / Resign Account")
+                }
+            }
 }
