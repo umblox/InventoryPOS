@@ -22,7 +22,6 @@ import androidx.navigation.NavController
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
-import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(
@@ -38,20 +37,16 @@ fun RegisterScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
-    // VARIABEL BARU: Untuk Notifikasi Premium (Snackbar)
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
     
+    // PERBAIKAN UTAMA: Sekuensial tanpa coroutineScope nested agar tidak stuck
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Akun berhasil dibuat! Silakan Login.",
-                    duration = SnackbarDuration.Short
-                )
-                kotlinx.coroutines.delay(1500) // Tunggu sebentar agar notif terbaca
-                navController.popBackStack()
-            }
+            snackbarHostState.showSnackbar(
+                message = "Akun berhasil dibuat! Silakan Login.",
+                duration = SnackbarDuration.Short
+            )
+            navController.popBackStack()
         }
     }
     
@@ -63,7 +58,6 @@ fun RegisterScreen(
                 onBackClick = { navController.popBackStack() }
             )
         },
-        // TAMPILAN SNACKBAR CUSTOM
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 Snackbar(
