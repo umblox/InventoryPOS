@@ -1,5 +1,6 @@
 package com.inventorypos.presentation.screens.users
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,18 +29,10 @@ fun UserEditScreen(
     val isSaving by viewModel.isSaving.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     
-    // State untuk kontrol dropdown
     var expanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(userId) {
-        viewModel.loadUser(userId)
-    }
-
-    LaunchedEffect(isSuccess) {
-        if (isSuccess) {
-            navController.popBackStack()
-        }
-    }
+    LaunchedEffect(userId) { viewModel.loadUser(userId) }
+    LaunchedEffect(isSuccess) { if (isSuccess) navController.popBackStack() }
 
     Scaffold(
         topBar = {
@@ -48,17 +41,12 @@ fun UserEditScreen(
         containerColor = PremiumDarkBackground
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(padding)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomTextField(value = fullName, onValueChange = viewModel::onFullNameChange, label = "Full Name", leadingIcon = Icons.Default.Person)
             CustomTextField(value = username, onValueChange = viewModel::onUsernameChange, label = "Username", leadingIcon = Icons.Default.AccountCircle)
 
-            // DROPDOWN MENU UNTUK ROLE
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
@@ -71,10 +59,8 @@ fun UserEditScreen(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PremiumGold,
-                        unfocusedBorderColor = PremiumDarkSurface,
-                        focusedTextColor = PremiumTextPrimary,
-                        unfocusedTextColor = PremiumTextPrimary
+                        focusedBorderColor = PremiumGold, unfocusedBorderColor = PremiumDarkSurface,
+                        focusedTextColor = PremiumTextPrimary, unfocusedTextColor = PremiumTextPrimary
                     )
                 )
                 
@@ -86,10 +72,7 @@ fun UserEditScreen(
                     UserRole.values().forEach { roleEnum ->
                         DropdownMenuItem(
                             text = { Text(roleEnum.name, color = PremiumTextPrimary) },
-                            onClick = {
-                                viewModel.onRoleChange(roleEnum.name)
-                                expanded = false
-                            }
+                            onClick = { viewModel.onRoleChange(roleEnum.name); expanded = false }
                         )
                     }
                 }
@@ -97,12 +80,7 @@ fun UserEditScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            CustomButton(
-                text = "Save Changes",
-                onClick = { viewModel.updateUser(userId) },
-                isLoading = isSaving,
-                modifier = Modifier.fillMaxWidth()
-            )
+            CustomButton(text = "Save Changes", onClick = { viewModel.updateUser(userId) }, isLoading = isSaving, modifier = Modifier.fillMaxWidth())
         }
     }
 }
