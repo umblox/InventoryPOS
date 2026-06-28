@@ -2,6 +2,8 @@ package com.inventorypos.presentation.screens.inventory.category
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Category
+import com.inventorypos.domain.repository.CategoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +11,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CategoryAddViewModel @Inject constructor() : ViewModel() {
+class CategoryAddViewModel @Inject constructor(
+    private val categoryRepository: CategoryRepository // Injeksi Repository
+) : ViewModel() {
     
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name
@@ -37,9 +41,24 @@ class CategoryAddViewModel @Inject constructor() : ViewModel() {
         
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(1000)
-            _isSuccess.value = true
-            _isLoading.value = false
+            _error.value = null
+            try {
+                // Membuat domain model dari inputan
+                val newCategory = Category(
+                    name = _name.value,
+                    description = _description.value,
+                    isActive = true
+                )
+                
+                // Menyimpan ke database melalui repository
+                categoryRepository.insertCategory(newCategory)
+                
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = "Failed to save: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
