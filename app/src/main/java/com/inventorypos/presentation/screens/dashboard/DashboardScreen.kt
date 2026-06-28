@@ -1,5 +1,6 @@
 package com.inventorypos.presentation.screens.dashboard
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.inventorypos.data.local.entity.UserRole
 import com.inventorypos.presentation.components.common.CustomTopBar
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.screens.dashboard.widgets.*
@@ -28,12 +31,22 @@ fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+    // Menarik data user yang sedang aktif
+    val currentUser by viewModel.currentUser.collectAsState()
+
     val todaySales by viewModel.todaySales.collectAsState()
     val transactionCount by viewModel.transactionCount.collectAsState()
     val lowStockCount by viewModel.lowStockCount.collectAsState()
     val productCount by viewModel.productCount.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
     
+    val context = LocalContext.current
+    
+    // Variabel logika Hak Akses (Role-Based Access)
+    val isSuperAdmin = currentUser?.role == UserRole.SUPER_ADMIN
+    val isKasir = currentUser?.role == UserRole.CASHIER
+    val isGudang = currentUser?.role == UserRole.WAREHOUSE
+
     Scaffold(
         topBar = {
             CustomTopBar(
@@ -41,31 +54,29 @@ fun DashboardScreen(
                 subtitle = "Overview of your business",
                 showBackButton = false,
                 actions = {
-                    IconButton(onClick = { navController.navigate(Screen.Profile.route) }) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            "Profile",
-                            tint = PremiumGold,
-                            modifier = Modifier.size(28.dp)
-                        )
+                    // Tombol Settings KHUSUS SUPER ADMIN
+                    if (isSuperAdmin) {
+                        IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                            Icon(Icons.Default.Settings, "Settings", tint = PremiumGold, modifier = Modifier.size(24.dp))
+                        }
                     }
-                    IconButton(onClick = { /* Notifications */ }) {
+                    // Perbaikan Lonceng Notifikasi (Padding ditambah & Fungsi Toast)
+                    IconButton(onClick = { 
+                        Toast.makeText(context, "Belum ada notifikasi baru", Toast.LENGTH_SHORT).show() 
+                    }) {
                         BadgedBox(
                             badge = {
-                                Badge(
-                                    containerColor = PremiumError,
-                                    contentColor = PremiumTextPrimary
-                                ) {
+                                Badge(containerColor = PremiumError, contentColor = PremiumTextPrimary) {
                                     Text("3", style = MaterialTheme.typography.labelSmall)
                                 }
-                            }
+                            },
+                            modifier = Modifier.padding(end = 4.dp) // Mencegah terpotong
                         ) {
-                            Icon(
-                                Icons.Default.Notifications,
-                                "Notifications",
-                                tint = PremiumGold
-                            )
+                            Icon(Icons.Default.Notifications, "Notifications", tint = PremiumGold)
                         }
+                    }
+                    IconButton(onClick = { navController.navigate(Screen.Profile.route) }) {
+                        Icon(Icons.Default.AccountCircle, "Profile", tint = PremiumGold, modifier = Modifier.size(28.dp))
                     }
                 }
             )
@@ -73,111 +84,107 @@ fun DashboardScreen(
         containerColor = PremiumDarkBackground
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Welcome Banner
+            // Welcome Banner Dinamis (Menampilkan Nama Asli)
             item {
-                WelcomeBanner(userName = "Admin")
-            }
-            
-            // Summary Cards Row
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SummaryCard(
-                        title = "Today's Sales",
-                        value = "Rp ${String.format("%,.0f", todaySales)}",
-                        icon = Icons.Default.AttachMoney,
-                        gradient = Brush.linearGradient(
-                            colors = listOf(PremiumGold.copy(alpha = 0.3f), PremiumGold.copy(alpha = 0.1f))
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Transactions",
-                        value = transactionCount.toString(),
-                        icon = Icons.Default.ReceiptLong,
-                        gradient = Brush.linearGradient(
-                            colors = listOf(PremiumAccent.copy(alpha = 0.3f), PremiumAccent.copy(alpha = 0.1f))
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            
-            // Second Row
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SummaryCard(
-                        title = "Products",
-                        value = productCount.toString(),
-                        icon = Icons.Default.Inventory,
-                        gradient = Brush.linearGradient(
-                            colors = listOf(PremiumInfo.copy(alpha = 0.3f), PremiumInfo.copy(alpha = 0.1f))
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Low Stock",
-                        value = lowStockCount.toString(),
-                        icon = Icons.Default.Warning,
-                        gradient = Brush.linearGradient(
-                            colors = listOf(PremiumError.copy(alpha = 0.3f), PremiumError.copy(alpha = 0.1f))
-                        ),
-                        modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.StockList.route) }
-                    )
-                }
-            }
-            
-            // Quick Actions
-            item {
-                QuickActionsPanel(navController)
-            }
-            
-            // Recent Transactions
-            item {
-                RecentTransactionsCard(
-                    transactions = recentTransactions,
-                    onViewAll = { navController.navigate(Screen.SalesReport.route) },
-                    onTransactionClick = { /* Detail */ }
+                WelcomeBanner(
+                    userName = currentUser?.fullName ?: "Pegawai", 
+                    roleName = currentUser?.role?.name ?: "Loading..."
                 )
             }
             
-            // Top Products Chart
-            item {
-                TopProductsCard()
+            // Tampilkan Ringkasan Uang (Sales) HANYA untuk Admin & Super Admin
+            if (isSuperAdmin || currentUser?.role == UserRole.ADMIN) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        SummaryCard(
+                            title = "Today's Sales",
+                            value = "Rp ${String.format("%,.0f", todaySales)}",
+                            icon = Icons.Default.AttachMoney,
+                            gradient = Brush.linearGradient(colors = listOf(PremiumGold.copy(alpha = 0.3f), PremiumGold.copy(alpha = 0.1f))),
+                            modifier = Modifier.weight(1f)
+                        )
+                        SummaryCard(
+                            title = "Transactions",
+                            value = transactionCount.toString(),
+                            icon = Icons.Default.ReceiptLong,
+                            gradient = Brush.linearGradient(colors = listOf(PremiumAccent.copy(alpha = 0.3f), PremiumAccent.copy(alpha = 0.1f))),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
+            
+            // Second Row (Stok Barang - Bisa dilihat semua kecuali Kasir murni)
+            if (!isKasir) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        SummaryCard(
+                            title = "Products",
+                            value = productCount.toString(),
+                            icon = Icons.Default.Inventory,
+                            gradient = Brush.linearGradient(colors = listOf(PremiumInfo.copy(alpha = 0.3f), PremiumInfo.copy(alpha = 0.1f))),
+                            modifier = Modifier.weight(1f)
+                        )
+                        SummaryCard(
+                            title = "Low Stock",
+                            value = lowStockCount.toString(),
+                            icon = Icons.Default.Warning,
+                            gradient = Brush.linearGradient(colors = listOf(PremiumError.copy(alpha = 0.3f), PremiumError.copy(alpha = 0.1f))),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate(Screen.StockList.route) }
+                        )
+                    }
+                }
+            }
+            
+            // Quick Actions (Disesuaikan Peran)
             item {
-            Spacer(modifier = Modifier.height(32.dp))
+                QuickActionsPanel(
+                    navController = navController,
+                    isKasir = isKasir,
+                    isGudang = isGudang,
+                    isSuperAdmin = isSuperAdmin
+                )
+            }
+            
+            // Riwayat & Top Product HANYA untuk Admin/Pemilik
+            if (isSuperAdmin || currentUser?.role == UserRole.ADMIN) {
+                item {
+                    RecentTransactionsCard(
+                        transactions = recentTransactions,
+                        onViewAll = { navController.navigate(Screen.SalesReport.route) },
+                        onTransactionClick = { /* Detail */ }
+                    )
+                }
+                
+                item {
+                    TopProductsCard()
+                }
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 }
 
+// Komponen Welcome Banner di-Update agar menerima parameter "roleName"
 @Composable
-fun WelcomeBanner(userName: String) {
+fun WelcomeBanner(userName: String, roleName: String) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        PremiumGold.copy(alpha = 0.2f),
-                        PremiumDarkSurface
-                    )
-                )
-            )
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+            .background(Brush.linearGradient(colors = listOf(PremiumGold.copy(alpha = 0.2f), PremiumDarkSurface)))
             .padding(20.dp)
     ) {
         Row(
@@ -186,41 +193,22 @@ fun WelcomeBanner(userName: String) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column {
-                Text(
-                    text = "Welcome back,",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PremiumTextSecondary
-                )
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = PremiumGold,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Ready to manage your business?",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PremiumTextMuted
-                )
+                Text(text = "Welcome back,", style = MaterialTheme.typography.bodyMedium, color = PremiumTextSecondary)
+                Text(text = userName, style = MaterialTheme.typography.headlineSmall, color = PremiumGold, fontWeight = FontWeight.Bold)
+                // Menampilkan Jabatan
+                Text(text = "Login as: $roleName", style = MaterialTheme.typography.bodySmall, color = PremiumTextMuted)
             }
             Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(PremiumGold.copy(alpha = 0.2f)),
+                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(PremiumGold.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.Store,
-                    contentDescription = "Store",
-                    tint = PremiumGold,
-                    modifier = Modifier.size(28.dp)
-                )
+                Icon(Icons.Default.Store, contentDescription = "Store", tint = PremiumGold, modifier = Modifier.size(28.dp))
             }
         }
     }
 }
 
+// ... Fungsi SummaryCard TETAP SAMA SEPERTI ASLINYA (Saya singkat agar tidak menuh-menuhin pesan, Anda copy dari atas ya)
 @Composable
 fun SummaryCard(
     title: String,
@@ -231,7 +219,6 @@ fun SummaryCard(
     onClick: (() -> Unit)? = null
 ) {
     Card(
-        // PERUBAHAN DI BARIS INI:
         modifier = if (onClick != null) modifier.clickable { onClick() } else modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
@@ -280,52 +267,58 @@ fun SummaryCard(
     }
 }
 
+// PANEL QUICK ACTION DINAMIS
 @Composable
-fun QuickActionsPanel(navController: NavController) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "Quick Actions",
-            style = MaterialTheme.typography.titleMedium,
-            color = PremiumTextPrimary
-        )
+fun QuickActionsPanel(
+    navController: NavController,
+    isKasir: Boolean,
+    isGudang: Boolean,
+    isSuperAdmin: Boolean
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Quick Actions", style = MaterialTheme.typography.titleMedium, color = PremiumTextPrimary)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            QuickActionButton(
-                icon = Icons.Default.PointOfSale,
-                label = "New Sale",
-                color = PremiumGold,
-                modifier = Modifier.weight(1f),
-                onClick = { navController.navigate(Screen.POS.route) }
-            )
-            QuickActionButton(
-                icon = Icons.Default.Add,
-                label = "Add Product",
-                color = PremiumAccent,
-                modifier = Modifier.weight(1f),
-                onClick = { navController.navigate(Screen.ProductAdd.route) }
-            )
-            QuickActionButton(
-                icon = Icons.Default.Inventory,
-                label = "Stock In",
-                color = PremiumInfo,
-                modifier = Modifier.weight(1f),
-                onClick = { navController.navigate(Screen.StockIn.route) }
-            )
-            QuickActionButton(
-                icon = Icons.Default.People,
-                label = "Customer",
-                color = PremiumWarning,
-                modifier = Modifier.weight(1f),
-                onClick = { navController.navigate(Screen.CustomerAdd.route) }
-            )
+            // Kasir, Admin, SuperAdmin boleh jualan
+            if (!isGudang) {
+                QuickActionButton(
+                    icon = Icons.Default.PointOfSale, label = "New Sale", color = PremiumGold, modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate(Screen.POS.route) }
+                )
+            }
+            
+            // Gudang, Admin, SuperAdmin boleh input stok/produk
+            if (!isKasir) {
+                QuickActionButton(
+                    icon = Icons.Default.Add, label = "Add Product", color = PremiumAccent, modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate(Screen.ProductAdd.route) }
+                )
+                QuickActionButton(
+                    icon = Icons.Default.Inventory, label = "Stock In", color = PremiumInfo, modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate(Screen.StockIn.route) }
+                )
+            }
+            
+            // Hanya Pemilik (Super Admin) yang mengatur Karyawan (Manajemen User) dari depan
+            if (isSuperAdmin) {
+                QuickActionButton(
+                    icon = Icons.Default.People, label = "Staffs", color = PremiumWarning, modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate(Screen.UserList.route) }
+                )
+            } else if (isKasir) { 
+                // Jika dia Kasir, tombol tambahannya adalah Tambah Pelanggan
+                QuickActionButton(
+                    icon = Icons.Default.PersonAdd, label = "Customer", color = PremiumWarning, modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate(Screen.CustomerAdd.route) }
+                )
+            }
         }
     }
 }
 
+// ... Fungsi QuickActionButton TETAP SAMA SEPERTI ASLINYA
 @Composable
 fun QuickActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -335,7 +328,6 @@ fun QuickActionButton(
     onClick: () -> Unit
 ) {
     Card(
-        // PERUBAHAN DI BARIS INI:
         modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface),
