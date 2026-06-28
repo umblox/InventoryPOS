@@ -75,6 +75,8 @@ fun CategoryListScreen(
     }
 }
 
+// PERBAIKAN: Menambahkan @OptIn agar penggunaan onClick pada Card Material3 tidak error
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryCard(
     category: com.inventorypos.domain.model.Category,
@@ -92,7 +94,8 @@ fun CategoryCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically // Menyelaraskan teks dan ikon ke tengah vertikal
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
