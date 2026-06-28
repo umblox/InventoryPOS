@@ -75,9 +75,10 @@ fun UserListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserCard(
-    user: com.inventorypos.domain.model.User,
+    user: com.inventorypos.data.local.entity.UserEntity, // PERUBAHAN PENTING: Gunakan UserEntity
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onPermission: () -> Unit
@@ -102,7 +103,7 @@ fun UserCard(
                     color = PremiumTextPrimary
                 )
                 Text(
-                    text = "@${user.username} • ${user.role}",
+                    text = "@${user.username} • ${user.role.name}", // .name untuk enum
                     style = MaterialTheme.typography.bodySmall,
                     color = PremiumTextMuted
                 )
