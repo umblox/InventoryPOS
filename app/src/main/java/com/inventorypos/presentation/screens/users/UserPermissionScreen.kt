@@ -20,14 +20,19 @@ fun UserPermissionScreen(
 ) {
     val permissions by viewModel.permissions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isSuccess by viewModel.isSuccess.collectAsState()
+
+    LaunchedEffect(userId) {
+        viewModel.loadPermissions(userId)
+    }
+
+    LaunchedEffect(isSuccess) {
+        if (isSuccess) navController.popBackStack()
+    }
 
     Scaffold(
         topBar = {
-            CustomTopBar(
-                title = "Permissions",
-                subtitle = "User ID: #$userId",
-                onBackClick = { navController.popBackStack() }
-            )
+            CustomTopBar(title = "Permissions", subtitle = "User ID: #$userId", onBackClick = { navController.popBackStack() })
         },
         containerColor = PremiumDarkBackground
     ) { padding ->
@@ -57,19 +62,17 @@ fun UserPermissionScreen(
                             )
                         )
                     }
-                    Divider(color = PremiumDarkSurfaceVariant)
+                    HorizontalDivider(color = PremiumDarkSurfaceVariant)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 CustomButton(
                     text = "Save Permissions",
-                    onClick = { navController.popBackStack() },
+                    onClick = { viewModel.savePermissions(userId) }, // Menyimpan ke DB nyata
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
 }
-
-data class Permission(val name: String, val isGranted: Boolean)
