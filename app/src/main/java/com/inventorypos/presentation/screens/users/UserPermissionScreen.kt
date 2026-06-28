@@ -62,14 +62,15 @@ fun UserPermissionScreen(
                             )
                         )
                     }
-                    HorizontalDivider(color = PremiumDarkSurfaceVariant)
+                    // PERBAIKAN: Menggunakan Divider (Material 3 standard)
+                    Divider(color = PremiumDarkSurfaceVariant)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 CustomButton(
                     text = "Save Permissions",
-                    onClick = { viewModel.savePermissions(userId) }, // Menyimpan ke DB nyata
+                    onClick = { viewModel.savePermissions(userId) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
