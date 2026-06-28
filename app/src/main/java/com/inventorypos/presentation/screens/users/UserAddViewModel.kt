@@ -1,132 +1,80 @@
 package com.inventorypos.presentation.screens.users
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.dao.UserDao
+import com.inventorypos.data.local.entity.UserEntity
 import com.inventorypos.data.local.entity.UserRole
-import com.inventorypos.presentation.components.common.*
-import com.inventorypos.presentation.theme.*
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UserAddScreen(
-    navController: NavController,
-    viewModel: UserAddViewModel = hiltViewModel()
-) {
-    val fullName by viewModel.fullName.collectAsState()
-    val username by viewModel.username.collectAsState()
-    val password by viewModel.password.collectAsState()
-    val role by viewModel.role.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isSuccess by viewModel.isSuccess.collectAsState()
-    val error by viewModel.error.collectAsState()
+@HiltViewModel
+class UserAddViewModel @Inject constructor(
+    private val userDao: UserDao // Injeksi UserDao
+) : ViewModel() {
+    private val _fullName = MutableStateFlow("")
+    val fullName: StateFlow<String> = _fullName
 
-    var expanded by remember { mutableStateOf(false) }
+    private val _username = MutableStateFlow("")
+    val username: StateFlow<String> = _username
 
-    LaunchedEffect(isSuccess) { if (isSuccess) navController.popBackStack() }
+    private val _password = MutableStateFlow("")
+    val password: StateFlow<String> = _password
 
-    Scaffold(
-        topBar = {
-            CustomTopBar(
-                title = "Add User",
-                subtitle = "Create new user account",
-                onBackClick = { navController.popBackStack() }
-            )
-        },
-        containerColor = PremiumDarkBackground
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CustomTextField(
-                value = fullName,
-                onValueChange = viewModel::onFullNameChange,
-                label = "Full Name *",
-                placeholder = "Enter full name",
-                leadingIcon = Icons.Default.Person
-            )
+    private val _role = MutableStateFlow("CASHIER")
+    val role: StateFlow<String> = _role
 
-            CustomTextField(
-                value = username,
-                onValueChange = viewModel::onUsernameChange,
-                label = "Username *",
-                placeholder = "Enter username",
-                leadingIcon = Icons.Default.AccountCircle
-            )
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
-            CustomTextField(
-                value = password,
-                onValueChange = viewModel::onPasswordChange,
-                label = "Password *",
-                placeholder = "Enter password",
-                leadingIcon = Icons.Default.Lock,
-                isPassword = true
-            )
+    private val _isSuccess = MutableStateFlow(false)
+    val isSuccess: StateFlow<Boolean> = _isSuccess
 
-            // DROPDOWN MENU ROLE
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    value = role,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Role *", color = PremiumTextSecondary) },
-                    leadingIcon = { Icon(Icons.Default.Security, null, tint = PremiumGold) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PremiumGold,
-                        unfocusedBorderColor = PremiumDarkSurface,
-                        focusedTextColor = PremiumTextPrimary,
-                        unfocusedTextColor = PremiumTextPrimary
-                    )
-                )
-                
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(PremiumDarkSurface)
-                ) {
-                    UserRole.values().forEach { roleEnum ->
-                        DropdownMenuItem(
-                            text = { Text(roleEnum.name, color = PremiumTextPrimary) },
-                            onClick = {
-                                viewModel.onRoleChange(roleEnum.name)
-                                expanded = false
-                            }
-                        )
-                    }
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    fun onFullNameChange(value: String) { _fullName.value = value; _error.value = null }
+    fun onUsernameChange(value: String) { _username.value = value; _error.value = null }
+    fun onPasswordChange(value: String) { _password.value = value; _error.value = null }
+    fun onRoleChange(value: String) { _role.value = value; _error.value = null }
+
+    fun saveUser() {
+        if (_fullName.value.isBlank()) { _error.value = "Full name is required"; return }
+        if (_username.value.isBlank()) { _error.value = "Username is required"; return }
+        if (_password.value.length < 6) { _error.value = "Password min 6 characters"; return }
+        
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                // Konversi String role ke Enum UserRole
+                val roleEnum = try {
+                    UserRole.valueOf(_role.value)
+                } catch (e: Exception) {
+                    UserRole.CASHIER
                 }
+
+                // Buat entitas user baru
+                val newUser = UserEntity(
+                    fullName = _fullName.value,
+                    username = _username.value,
+                    passwordHash = _password.value,
+                    role = roleEnum,
+                    isActive = true
+                )
+
+                // Simpan ke Database
+                userDao.insert(newUser)
+                
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to save user"
+            } finally {
+                _isLoading.value = false
             }
-
-            if (error != null) {
-                Text(text = error!!, color = PremiumError, style = MaterialTheme.typography.bodySmall)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            CustomButton(
-                text = "Save User",
-                onClick = viewModel::saveUser,
-                isLoading = isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     }
 }
