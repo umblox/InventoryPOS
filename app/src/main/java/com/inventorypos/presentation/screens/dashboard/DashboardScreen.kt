@@ -41,11 +41,17 @@ fun DashboardScreen(
     val recentTransactions by viewModel.recentTransactions.collectAsState()
     
     val context = LocalContext.current
-    
-    // Variabel logika Hak Akses (Role-Based Access)
-    val isSuperAdmin = currentUser?.role == UserRole.SUPER_ADMIN
-    val isKasir = currentUser?.role == UserRole.CASHIER
-    val isGudang = currentUser?.role == UserRole.WAREHOUSE
+        val permissions by viewModel.userPermissions.collectAsState()
+    val isSuperAdmin = currentUser?.role == com.inventorypos.data.local.entity.UserRole.SUPER_ADMIN
+
+    // Menggunakan Granular Permission (Super Admin otomatis lolos semua gerbang)
+    val canViewDashboard = isSuperAdmin || permissions.contains("View Dashboard")
+    val canManagePOS      = isSuperAdmin || permissions.contains("Manage POS")
+    val canManageProducts = isSuperAdmin || permissions.contains("Manage Products")
+    val canManageStock    = isSuperAdmin || permissions.contains("Manage Stock")
+    val canViewReports    = isSuperAdmin || permissions.contains("View Reports")
+    val canManageUsers    = isSuperAdmin || permissions.contains("Manage Users")
+    val canManageSettings = isSuperAdmin || permissions.contains("Manage Settings")
 
     Scaffold(
         topBar = {
