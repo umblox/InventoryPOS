@@ -2,19 +2,39 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Product
 import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class StockInViewModel @Inject constructor(
-    private val productRepository: ProductRepository // Injeksi Repository
+    private val productRepository: ProductRepository
 ) : ViewModel() {
-    private val _productSearch = MutableStateFlow("")
-    val productSearch: StateFlow<String> = _productSearch
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    // Otomatis mencari produk di database jika teks > 2 huruf
+    val searchResults: StateFlow<List<Product>> = _searchQuery
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.length > 2) {
+                // Asumsi: Anda akan butuh fungsi ini di ProductRepository. 
+                // Jika belum ada, sementara kita ambil semua lalu filter lokal.
+                productRepository.getAllProducts().map { list ->
+                    list.filter { it.name.contains(query, ignoreCase = true) || it.sku.contains(query, ignoreCase = true) }
+                }
+            } else flowOf(emptyList())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _selectedProduct = MutableStateFlow<Product?>(null)
+    val selectedProduct: StateFlow<Product?> = _selectedProduct
 
     private val _quantity = MutableStateFlow("")
     val quantity: StateFlow<String> = _quantity
@@ -31,30 +51,32 @@ class StockInViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun onProductSearchChange(value: String) { _productSearch.value = value; _error.value = null }
+    fun onSearchQueryChange(value: String) { _searchQuery.value = value; _error.value = null }
+    fun selectProduct(product: Product) { _selectedProduct.value = product; _searchQuery.value = "" }
+    fun clearSelection() { _selectedProduct.value = null; _quantity.value = ""; _notes.value = "" }
+    
     fun onQuantityChange(value: String) { _quantity.value = value; _error.value = null }
     fun onNotesChange(value: String) { _notes.value = value }
 
     fun confirmStockIn() {
-        if (_productSearch.value.isBlank()) { _error.value = "Product is required"; return }
+        val product = _selectedProduct.value
+        if (product == null) { _error.value = "Please select a product"; return }
+        
         val qty = _quantity.value.toIntOrNull()
-        if (qty == null || qty <= 0) {
-            _error.value = "Valid quantity is required"; return
-        }
+        if (qty == null || qty <= 0) { _error.value = "Valid quantity is required"; return }
 
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // LOGIKA NYATA: Ambil produk berdasarkan nama/sku, lalu tambah stok
-                val product = productRepository.getProductByName(_productSearch.value)
-                if (product != null) {
-                    productRepository.updateStock(product.id, product.stock + qty)
-                    _isSuccess.value = true
-                } else {
-                    _error.value = "Product not found"
-                }
+                // 1. Update stok produk
+                val updatedProduct = product.copy(stock = product.stock + qty)
+                productRepository.updateProduct(updatedProduct)
+                
+                // TODO: 2. Insert ke StockDao (StockLogEntity) nanti saat struktur tabel Log Anda sudah fix
+                
+                _isSuccess.value = true
             } catch (e: Exception) {
-                _error.value = "Failed to update stock"
+                _error.value = e.message ?: "Failed to update stock"
             } finally {
                 _isLoading.value = false
             }
