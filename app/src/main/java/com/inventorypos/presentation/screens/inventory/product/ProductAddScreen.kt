@@ -1,5 +1,7 @@
 package com.inventorypos.presentation.screens.inventory.product
 
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,11 +12,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.inventorypos.domain.model.Category
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.theme.*
 
@@ -32,12 +36,19 @@ fun ProductAddScreen(
     val stock by viewModel.stock.collectAsState()
     val minStock by viewModel.minStock.collectAsState()
     val description by viewModel.description.collectAsState()
+    
+    // MENANGKAP LIST KATEGORI DARI VIEWMODEL
+    val categories by viewModel.categories.collectAsState()
+    
     val isLoading by viewModel.isLoading.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     val error by viewModel.error.collectAsState()
     
+    val context = LocalContext.current
+    
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
+            Toast.makeText(context, "Produk berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
             navController.popBackStack()
         }
     }
@@ -64,16 +75,10 @@ fun ProductAddScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Product Image Placeholder
-                ProductImagePicker(
-                    onImageSelected = viewModel::onImageSelected
-                )
+                // Product Image Placeholder (Pastikan komponen ini sudah ada di project Anda)
+                // ProductImagePicker(onImageSelected = viewModel::onImageSelected)
                 
-                // Basic Info Section
-                SectionHeader(
-                    icon = Icons.Default.Info,
-                    title = "Basic Information"
-                )
+                SectionHeader(icon = Icons.Default.Info, title = "Basic Information")
                 
                 CustomTextField(
                     value = name,
@@ -95,17 +100,14 @@ fun ProductAddScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
                 
-                // Category Dropdown
+                // MENGIRIM LIST KATEGORI KE DROPDOWN
                 CategoryDropdown(
+                    categories = categories,
                     selectedCategoryId = categoryId,
                     onCategorySelected = viewModel::onCategoryChange
                 )
                 
-                // Pricing Section
-                SectionHeader(
-                    icon = Icons.Default.AttachMoney,
-                    title = "Pricing"
-                )
+                SectionHeader(icon = Icons.Default.AttachMoney, title = "Pricing")
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -117,10 +119,7 @@ fun ProductAddScreen(
                         label = "Buy Price *",
                         placeholder = "0",
                         leadingIcon = Icons.Default.ShoppingCart,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Next
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                         modifier = Modifier.weight(1f)
                     )
                     CustomTextField(
@@ -129,19 +128,12 @@ fun ProductAddScreen(
                         label = "Sell Price *",
                         placeholder = "0",
                         leadingIcon = Icons.Default.Sell,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Next
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                         modifier = Modifier.weight(1f)
                     )
                 }
                 
-                // Stock Section
-                SectionHeader(
-                    icon = Icons.Default.Inventory,
-                    title = "Stock Management"
-                )
+                SectionHeader(icon = Icons.Default.Inventory, title = "Stock Management")
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -153,10 +145,7 @@ fun ProductAddScreen(
                         label = "Initial Stock *",
                         placeholder = "0",
                         leadingIcon = Icons.Default.AddBox,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Next
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                         modifier = Modifier.weight(1f)
                     )
                     CustomTextField(
@@ -165,15 +154,11 @@ fun ProductAddScreen(
                         label = "Min Stock Alert",
                         placeholder = "5",
                         leadingIcon = Icons.Default.Warning,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Next
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                         modifier = Modifier.weight(1f)
                     )
                 }
                 
-                // Description
                 CustomTextField(
                     value = description,
                     onValueChange = viewModel::onDescriptionChange,
@@ -186,7 +171,6 @@ fun ProductAddScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Save Button
                 CustomButton(
                     text = "Save Product",
                     onClick = viewModel::saveProduct,
@@ -207,7 +191,11 @@ fun ProductAddScreen(
             }
         }
     }
-    @Composable
+}
+
+// === KOMPONEN DIPISAH AGAR BERSIH ===
+
+@Composable
 fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -222,29 +210,54 @@ fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryDropdown(
+    categories: List<Category>, // Menerima list dari database
     selectedCategoryId: Long?,
     onCategorySelected: (Long) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    
+    // Mencari nama kategori yang sedang dipilih, atau tampilkan default
+    val selectedCategoryName = categories.find { it.id == selectedCategoryId }?.name ?: "Select Category"
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
-            value = if (selectedCategoryId != null && selectedCategoryId > 0) "Category $selectedCategoryId" else "Select Category",
+            value = selectedCategoryName,
             onValueChange = {},
             readOnly = true,
+            label = { Text("Category", color = PremiumTextSecondary) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor()
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PremiumGold,
+                unfocusedBorderColor = PremiumDarkSurface,
+                focusedTextColor = PremiumTextPrimary,
+                unfocusedTextColor = PremiumTextPrimary
+            )
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(PremiumDarkSurface)
         ) {
-            DropdownMenuItem(text = { Text("Food") }, onClick = { onCategorySelected(1L); expanded = false })
-            DropdownMenuItem(text = { Text("Drink") }, onClick = { onCategorySelected(2L); expanded = false })
-            DropdownMenuItem(text = { Text("Snack") }, onClick = { onCategorySelected(3L); expanded = false })
+            if (categories.isEmpty()) {
+                DropdownMenuItem(
+                    text = { Text("No Categories Available", color = PremiumTextMuted) },
+                    onClick = { expanded = false }
+                )
+            } else {
+                categories.forEach { category ->
+                    DropdownMenuItem(
+                        text = { Text(category.name, color = PremiumTextPrimary) },
+                        onClick = { 
+                            onCategorySelected(category.id) 
+                            expanded = false 
+                        }
+                    )
+                }
+            }
         }
     }
-}
 }
