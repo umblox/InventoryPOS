@@ -2,18 +2,38 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Product
+import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
-class StockAdjustmentViewModel @Inject constructor() : ViewModel() {
-    private val _productSearch = MutableStateFlow("")
-    val productSearch: StateFlow<String> = _productSearch
+class StockAdjustmentViewModel @Inject constructor(
+    private val productRepository: ProductRepository
+) : ViewModel() {
 
-    private val _currentStock = MutableStateFlow("0")
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    val searchResults: StateFlow<List<Product>> = _searchQuery
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.length > 2) {
+                productRepository.getAllProducts().map { list ->
+                    list.filter { it.name.contains(query, ignoreCase = true) || it.sku.contains(query, ignoreCase = true) }
+                }
+            } else flowOf(emptyList())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _selectedProduct = MutableStateFlow<Product?>(null)
+    val selectedProduct: StateFlow<Product?> = _selectedProduct
+
+    private val _currentStock = MutableStateFlow("")
     val currentStock: StateFlow<String> = _currentStock
 
     private val _newStock = MutableStateFlow("")
@@ -34,10 +54,20 @@ class StockAdjustmentViewModel @Inject constructor() : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun onProductSearchChange(value: String) {
-        _productSearch.value = value
-        _error.value = null
-        if (value.length > 2) _currentStock.value = "25"
+    fun onSearchQueryChange(value: String) { _searchQuery.value = value; _error.value = null }
+    
+    fun selectProduct(product: Product) { 
+        _selectedProduct.value = product
+        _currentStock.value = product.stock.toString() // Otomatis set stok saat ini
+        _searchQuery.value = "" 
+    }
+    
+    fun clearSelection() { 
+        _selectedProduct.value = null
+        _currentStock.value = ""
+        _newStock.value = ""
+        _reason.value = ""
+        _notes.value = "" 
     }
 
     fun onNewStockChange(value: String) { _newStock.value = value; _error.value = null }
@@ -45,16 +75,30 @@ class StockAdjustmentViewModel @Inject constructor() : ViewModel() {
     fun onNotesChange(value: String) { _notes.value = value }
 
     fun confirmAdjustment() {
-        if (_productSearch.value.isBlank()) { _error.value = "Product is required"; return }
-        if (_newStock.value.isBlank() || _newStock.value.toIntOrNull() == null) {
-            _error.value = "Valid new stock is required"; return
-        }
+        val product = _selectedProduct.value
+        if (product == null) { _error.value = "Please select a product"; return }
+        
+        val newQty = _newStock.value.toIntOrNull()
+        if (newQty == null || newQty < 0) { _error.value = "Valid new stock quantity is required"; return }
+        
+        if (newQty == product.stock) { _error.value = "New stock is exactly the same as current stock"; return }
         if (_reason.value.isBlank()) { _error.value = "Reason is required"; return }
+
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(800)
-            _isSuccess.value = true
-            _isLoading.value = false
+            try {
+                // Update stok menjadi nilai mutlak yang baru (New Stock)
+                val updatedProduct = product.copy(stock = newQty)
+                productRepository.updateProduct(updatedProduct)
+                
+                // TODO: Log ke StockLogEntity (nanti)
+                
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to adjust stock"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
