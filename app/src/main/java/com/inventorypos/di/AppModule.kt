@@ -12,6 +12,9 @@ import com.inventorypos.data.local.dao.ProductDao
 import com.inventorypos.data.local.dao.UserDao
 import com.inventorypos.data.local.dao.ProductSupplierDao
 
+// IMPORT DATABASE
+import com.inventorypos.data.local.database.AppDatabase
+
 // IMPORT LAINNYA
 import com.inventorypos.data.preferences.AuthPreferences
 
