@@ -1,4 +1,4 @@
-package com.inventorypos.domain.usecase
+package com.inventorypos.domain.usecase.product
 
 import com.inventorypos.data.local.dao.ProductSupplierDao
 import com.inventorypos.domain.model.SmartPoItem
