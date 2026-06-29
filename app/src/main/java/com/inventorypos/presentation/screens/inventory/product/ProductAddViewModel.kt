@@ -2,19 +2,29 @@ package com.inventorypos.presentation.screens.inventory.product
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Category
 import com.inventorypos.domain.model.Product
+import com.inventorypos.domain.repository.CategoryRepository
 import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductAddViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val categoryRepository: CategoryRepository // MENGINJEKSI CATEGORY REPOSITORY
 ) : ViewModel() {
     
+    // Menarik daftar kategori asli dari database secara reaktif
+    val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name
     
@@ -90,7 +100,8 @@ class ProductAddViewModel @Inject constructor(
                     buyPrice = buyPrice,
                     sellPrice = sellPrice,
                     stock = stock,
-                    minStock = minStock
+                    minStock = minStock,
+                    isActive = true // Memastikan produk aktif saat dibuat
                 )
                 productRepository.addProduct(product)
                 _isSuccess.value = true
