@@ -34,7 +34,11 @@ fun SupplierDetailScreen(
                 onBackClick = { navController.popBackStack() },
                 actions = {
                     IconButton(onClick = { navController.navigate(Screen.SupplierEdit.createRoute(supplierId)) }) {
-                        Icon(Icons.Default.Edit, "Edit", tint = PremiumGold)
+                        Icon(Icons.Default.Edit, "Edit", tint = PremiumInfo)
+                    }
+                    // TAMBAHAN: Tombol Hapus (Delete)
+                    IconButton(onClick = { navController.navigate(Screen.SupplierDelete.createRoute(supplierId)) }) {
+                        Icon(Icons.Default.Delete, "Delete", tint = PremiumError)
                     }
                 }
             )
@@ -93,9 +97,7 @@ fun DetailCard(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Str
         colors = CardDefaults.cardColors(containerColor = PremiumDarkSurface)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(icon, contentDescription = null, tint = PremiumGold)
