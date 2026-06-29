@@ -2,16 +2,36 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Product
+import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
-class StockTransferViewModel @Inject constructor() : ViewModel() {
-    private val _productSearch = MutableStateFlow("")
-    val productSearch: StateFlow<String> = _productSearch
+class StockTransferViewModel @Inject constructor(
+    private val productRepository: ProductRepository
+) : ViewModel() {
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    val searchResults: StateFlow<List<Product>> = _searchQuery
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.length > 2) {
+                productRepository.getAllProducts().map { list ->
+                    list.filter { it.name.contains(query, ignoreCase = true) || it.sku.contains(query, ignoreCase = true) }
+                }
+            } else flowOf(emptyList())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _selectedProduct = MutableStateFlow<Product?>(null)
+    val selectedProduct: StateFlow<Product?> = _selectedProduct
 
     private val _quantity = MutableStateFlow("")
     val quantity: StateFlow<String> = _quantity
@@ -34,25 +54,45 @@ class StockTransferViewModel @Inject constructor() : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun onProductSearchChange(value: String) { _productSearch.value = value; _error.value = null }
+    fun onSearchQueryChange(value: String) { _searchQuery.value = value; _error.value = null }
+    fun selectProduct(product: Product) { _selectedProduct.value = product; _searchQuery.value = "" }
+    fun clearSelection() { 
+        _selectedProduct.value = null
+        _quantity.value = ""
+        _fromLocation.value = ""
+        _toLocation.value = ""
+        _notes.value = "" 
+    }
+
     fun onQuantityChange(value: String) { _quantity.value = value; _error.value = null }
     fun onFromLocationChange(value: String) { _fromLocation.value = value; _error.value = null }
     fun onToLocationChange(value: String) { _toLocation.value = value; _error.value = null }
     fun onNotesChange(value: String) { _notes.value = value }
 
     fun confirmTransfer() {
-        if (_productSearch.value.isBlank()) { _error.value = "Product is required"; return }
-        if (_quantity.value.isBlank() || _quantity.value.toIntOrNull() == null || _quantity.value.toInt() <= 0) {
-            _error.value = "Valid quantity is required"; return
-        }
+        val product = _selectedProduct.value
+        if (product == null) { _error.value = "Please select a product"; return }
+
+        val qty = _quantity.value.toIntOrNull()
+        if (qty == null || qty <= 0) { _error.value = "Valid quantity is required"; return }
+        if (product.stock < qty) { _error.value = "Insufficient stock to transfer"; return }
+
         if (_fromLocation.value.isBlank()) { _error.value = "From location is required"; return }
         if (_toLocation.value.isBlank()) { _error.value = "To location is required"; return }
         if (_fromLocation.value == _toLocation.value) { _error.value = "Locations must be different"; return }
+
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(800)
-            _isSuccess.value = true
-            _isLoading.value = false
+            try {
+                // Total stok aplikasi tetap sama (hanya pindah rak/gudang). 
+                // TODO: Saat Multi-Branch diaktifkan, kita akan mengurangi stok di Location A dan menambah di Location B.
+                
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to transfer stock"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
