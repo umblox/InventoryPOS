@@ -19,11 +19,13 @@ import com.inventorypos.data.preferences.AuthPreferences
 import com.inventorypos.domain.repository.CategoryRepository
 import com.inventorypos.domain.repository.ProductRepository
 import com.inventorypos.domain.repository.AuthRepository
+import com.inventorypos.domain.repository.SupplierRepository
 
 // IMPORT DATA (Implementasi / Logika Database)
 import com.inventorypos.data.repository.CategoryRepositoryImpl 
 import com.inventorypos.data.repository.ProductRepositoryImpl
 import com.inventorypos.data.repository.AuthRepositoryImpl
+import com.inventorypos.data.repository.SupplierRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
