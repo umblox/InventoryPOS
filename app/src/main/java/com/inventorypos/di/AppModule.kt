@@ -1,19 +1,28 @@
 package com.inventorypos.di
 
-import com.inventorypos.data.local.dao.CategoryDao
-import com.inventorypos.data.local.dao.ProductDao
-import com.inventorypos.domain.repository.CategoryRepository
-import com.inventorypos.data.repository.CategoryRepositoryImpl 
-import com.inventorypos.data.repository.ProductRepository
-
-// PERBAIKAN: Kita kembalikan ini ke domain karena file aslinya terdaftar di sana
-import com.inventorypos.domain.repository.ProductRepositoryImpl
-
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+
+// IMPORT DAO
+import com.inventorypos.data.local.dao.CategoryDao
+import com.inventorypos.data.local.dao.ProductDao
+import com.inventorypos.data.local.dao.UserDao
+
+// IMPORT LAINNYA
+import com.inventorypos.data.preferences.AuthPreferences
+
+// IMPORT DOMAIN (Interface / Aturan)
+import com.inventorypos.domain.repository.CategoryRepository
+import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.AuthRepository
+
+// IMPORT DATA (Implementasi / Logika Database)
+import com.inventorypos.data.repository.CategoryRepositoryImpl 
+import com.inventorypos.data.repository.ProductRepositoryImpl
+import com.inventorypos.data.repository.AuthRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,9 +43,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAuthRepository(
-        userDao: com.inventorypos.data.local.dao.UserDao,
-        authPreferences: com.inventorypos.data.preferences.AuthPreferences
-    ): com.inventorypos.domain.repository.AuthRepository {
-        return com.inventorypos.data.repository.AuthRepositoryImpl(userDao, authPreferences)
+        userDao: UserDao,
+        authPreferences: AuthPreferences
+    ): AuthRepository {
+        return AuthRepositoryImpl(userDao, authPreferences)
     }
 }
