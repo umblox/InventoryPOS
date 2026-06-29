@@ -2,6 +2,8 @@ package com.inventorypos.presentation.screens.inventory.supplier
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Supplier
+import com.inventorypos.domain.repository.SupplierRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +11,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SupplierAddViewModel @Inject constructor() : ViewModel() {
+class SupplierAddViewModel @Inject constructor(
+    private val supplierRepository: SupplierRepository // Injeksi Repository
+) : ViewModel() {
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name
 
@@ -38,11 +42,24 @@ class SupplierAddViewModel @Inject constructor() : ViewModel() {
 
     fun saveSupplier() {
         if (_name.value.isBlank()) { _error.value = "Name is required"; return }
+        
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(800)
-            _isSuccess.value = true
-            _isLoading.value = false
+            try {
+                val newSupplier = Supplier(
+                    name = _name.value,
+                    phone = _phone.value.ifBlank { null },
+                    email = _email.value.ifBlank { null },
+                    address = _address.value.ifBlank { null },
+                    isActive = true
+                )
+                supplierRepository.addSupplier(newSupplier)
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to add supplier"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
