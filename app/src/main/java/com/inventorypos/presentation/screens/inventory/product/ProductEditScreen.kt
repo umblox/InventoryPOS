@@ -1,5 +1,6 @@
 package com.inventorypos.presentation.screens.inventory.product
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -24,24 +26,31 @@ fun ProductEditScreen(
     productId: Long,
     viewModel: ProductEditViewModel = hiltViewModel()
 ) {
-    // Load product data
-    LaunchedEffect(productId) {
-        viewModel.loadProduct(productId)
-    }
+    LaunchedEffect(productId) { viewModel.loadProduct(productId) }
     
     val product by viewModel.product.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
-    
-    // PERBAIKAN 1: Memantau nilai 'name' menggunakan collectAsState
-    val name by viewModel.name.collectAsState()
-    
-    // Memantau nilai 'error' (Untuk menyelesaikan warning "Variable 'error' is never used")
     val error by viewModel.error.collectAsState()
+    
+    // Field States
+    val name by viewModel.name.collectAsState()
+    val sku by viewModel.sku.collectAsState()
+    val categoryId by viewModel.categoryId.collectAsState()
+    val buyPrice by viewModel.buyPrice.collectAsState()
+    val sellPrice by viewModel.sellPrice.collectAsState()
+    val stock by viewModel.stock.collectAsState()
+    val minStock by viewModel.minStock.collectAsState()
+    val description by viewModel.description.collectAsState()
+    
+    // Categories List
+    val categories by viewModel.categories.collectAsState()
+    val context = LocalContext.current
     
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
+            Toast.makeText(context, "Produk berhasil diupdate!", Toast.LENGTH_SHORT).show()
             navController.popBackStack()
         }
     }
@@ -59,11 +68,7 @@ fun ProductEditScreen(
         if (isLoading) {
             LoadingIndicator()
         } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -71,59 +76,89 @@ fun ProductEditScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Same fields as Add, but pre-filled with product data
-                    ProductImagePicker(
-                        currentImage = product?.imageUrl,
-                        onImageSelected = viewModel::onImageSelected
-                    )
+                    // Placeholder (Pastikan komponen ini sudah ada di project Anda)
+                    // ProductImagePicker(currentImage = product?.imageUrl, onImageSelected = viewModel::onImageSelected)
                     
-                    SectionHeader(
-                        icon = Icons.Default.Info,
-                        title = "Basic Information"
-                    )
+                    SectionHeader(icon = Icons.Default.Info, title = "Basic Information")
                     
-                    // PERBAIKAN 2: Gunakan 'name' yang sudah di-collect, BUKAN viewModel.name.value
                     CustomTextField(
                         value = name,
                         onValueChange = viewModel::onNameChange,
-                        label = "Product Name",
-                        leadingIcon = Icons.Default.Label
+                        label = "Product Name *",
+                        leadingIcon = Icons.Default.Label,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                     
-                    // ... (same fields as Add, pre-filled)
+                    CustomTextField(
+                        value = sku,
+                        onValueChange = viewModel::onSkuChange,
+                        label = "SKU / Barcode *",
+                        leadingIcon = Icons.Default.QrCode,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    )
                     
-                    // PERBAIKAN 3: Menampilkan error jika ada, agar variabel error terpakai
-                    if (error != null) {
-                        Text(
-                            text = error!!,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PremiumError,
-                            modifier = Modifier.fillMaxWidth()
+                    // Reusing CategoryDropdown from Add Screen (Pastikan fungsi ini bisa diakses, 
+                    // jika tidak, letakkan copy fungsinya di file ini atau di komponen terpisah)
+                    CategoryDropdown(
+                        categories = categories,
+                        selectedCategoryId = categoryId,
+                        onCategorySelected = viewModel::onCategoryChange
+                    )
+                    
+                    SectionHeader(icon = Icons.Default.AttachMoney, title = "Pricing")
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        CustomTextField(
+                            value = buyPrice, onValueChange = viewModel::onBuyPriceChange, label = "Buy Price *",
+                            leadingIcon = Icons.Default.ShoppingCart, modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
                         )
+                        CustomTextField(
+                            value = sellPrice, onValueChange = viewModel::onSellPriceChange, label = "Sell Price *",
+                            leadingIcon = Icons.Default.Sell, modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                    }
+                    
+                    SectionHeader(icon = Icons.Default.Inventory, title = "Stock Management")
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        CustomTextField(
+                            value = stock, onValueChange = viewModel::onStockChange, label = "Stock *",
+                            leadingIcon = Icons.Default.AddBox, modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                        CustomTextField(
+                            value = minStock, onValueChange = viewModel::onMinStockChange, label = "Min Alert",
+                            leadingIcon = Icons.Default.Warning, modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                    }
+                    
+                    CustomTextField(
+                        value = description, onValueChange = viewModel::onDescriptionChange, label = "Description",
+                        leadingIcon = Icons.Default.Description, maxLines = 4, singleLine = false
+                    )
+                    
+                    if (error != null) {
+                        Text(text = error!!, style = MaterialTheme.typography.bodyMedium, color = PremiumError, modifier = Modifier.fillMaxWidth())
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         CustomButton(
-                            text = "Update",
-                            onClick = { viewModel.updateProduct(productId) },
-                            isLoading = isSaving,
-                            modifier = Modifier.weight(1f)
+                            text = "Update", onClick = { viewModel.updateProduct(productId) },
+                            isLoading = isSaving, modifier = Modifier.weight(1f)
                         )
                         OutlinedButton(
-                            onClick = { navController.popBackStack() },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = PremiumTextSecondary
-                            )
+                            onClick = { navController.popBackStack() }, modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PremiumTextSecondary)
                         ) {
                             Text("Cancel")
                         }
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
