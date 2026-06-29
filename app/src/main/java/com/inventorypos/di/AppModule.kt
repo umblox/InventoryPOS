@@ -48,4 +48,9 @@ object AppModule {
     ): AuthRepository {
         return AuthRepositoryImpl(userDao, authPreferences)
     }
+    @Provides
+    @Singleton
+    fun provideProductSupplierDao(database: AppDatabase): ProductSupplierDao {
+        return database.productSupplierDao()
+    }
 }
