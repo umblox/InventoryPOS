@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import com.inventorypos.presentation.screens.auth.LoginScreen
 import com.inventorypos.presentation.screens.customers.*
@@ -15,6 +16,7 @@ import com.inventorypos.presentation.screens.inventory.*
 import com.inventorypos.presentation.screens.inventory.category.*
 import com.inventorypos.presentation.screens.inventory.product.*
 import com.inventorypos.presentation.screens.inventory.stock.*
+import com.inventorypos.presentation.screens.inventory.supplier.*
 import com.inventorypos.presentation.screens.pos.*
 import com.inventorypos.presentation.screens.profile.ProfileScreen
 import com.inventorypos.presentation.screens.reports.sales.*
@@ -131,6 +133,39 @@ fun AppNavigation(navController: NavHostController) {
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getLong("categoryId") ?: 0L
             CategoryDeleteDialog(navController, categoryId)
+        }
+
+        // === SUPPLIER SCREENS (SEPARATE FILES) ===
+        composable(Screen.SupplierList.route) {
+            SupplierListScreen(navController)
+        }
+
+        composable(Screen.SupplierAdd.route) {
+            SupplierAddScreen(navController)
+        }
+
+        composable(
+            route = Screen.SupplierDetail.route,
+            arguments = listOf(navArgument("supplierId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val supplierId = backStackEntry.arguments?.getLong("supplierId") ?: 0L
+            SupplierDetailScreen(navController, supplierId)
+        }
+
+        composable(
+            route = Screen.SupplierEdit.route,
+            arguments = listOf(navArgument("supplierId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val supplierId = backStackEntry.arguments?.getLong("supplierId") ?: 0L
+            SupplierEditScreen(navController, supplierId)
+        }
+
+        dialog(
+            route = Screen.SupplierDelete.route,
+            arguments = listOf(navArgument("supplierId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val supplierId = backStackEntry.arguments?.getLong("supplierId") ?: 0L
+            SupplierDeleteDialog(navController, supplierId)
         }
         
         // === STOCK SCREENS (SEPARATE FILES) ===
