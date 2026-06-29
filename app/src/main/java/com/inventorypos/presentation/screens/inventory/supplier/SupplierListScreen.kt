@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
+import com.inventorypos.domain.model.Supplier
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
@@ -114,11 +115,3 @@ fun SupplierCard(
         }
     }
 }
-
-data class Supplier(
-    val id: Long,
-    val name: String,
-    val phone: String? = null,
-    val email: String? = null,
-    val address: String? = null
-)
