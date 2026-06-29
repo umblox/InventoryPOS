@@ -11,6 +11,7 @@ import com.inventorypos.data.local.entity.*
         ProductEntity::class,
         CategoryEntity::class,
         UserEntity::class,
+        SupplierEntity::class,
         TransactionEntity::class,
         TransactionItemEntity::class,
         CustomerEntity::class,
