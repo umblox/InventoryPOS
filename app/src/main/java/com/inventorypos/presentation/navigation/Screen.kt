@@ -105,4 +105,8 @@ sealed class Screen(val route: String) {
     object SupplierEdit : Screen("supplier_edit/{supplierId}") {
         fun createRoute(supplierId: Long) = "supplier_edit/$supplierId"
     }
+    object SupplierDelete : Screen("supplier_delete/{supplierId}") {
+        fun createRoute(supplierId: Long) = "supplier_delete/$supplierId"
+    }
+    
 }
