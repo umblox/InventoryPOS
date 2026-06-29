@@ -7,33 +7,43 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 // IMPORT DAO
-import com.inventorypos.data.local.dao.CategoryDao
-import com.inventorypos.data.local.dao.ProductDao
-import com.inventorypos.data.local.dao.UserDao
-import com.inventorypos.data.local.dao.ProductSupplierDao
-
+import com.inventorypos.data.local.dao.*
 // IMPORT DATABASE
 import com.inventorypos.data.local.database.AppDatabase
 
 // IMPORT LAINNYA
 import com.inventorypos.data.preferences.AuthPreferences
 
-// IMPORT DOMAIN (Interface / Aturan)
-import com.inventorypos.domain.repository.CategoryRepository
-import com.inventorypos.domain.repository.ProductRepository
-import com.inventorypos.domain.repository.AuthRepository
-import com.inventorypos.domain.repository.SupplierRepository
+// IMPORT DOMAIN (Interface)
+import com.inventorypos.domain.repository.*
 
-// IMPORT DATA (Implementasi / Logika Database)
-import com.inventorypos.data.repository.CategoryRepositoryImpl 
-import com.inventorypos.data.repository.ProductRepositoryImpl
-import com.inventorypos.data.repository.AuthRepositoryImpl
-import com.inventorypos.data.repository.SupplierRepositoryImpl
+// IMPORT DATA (Implementasi)
+import com.inventorypos.data.repository.*
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
     
+    // 1. PROVIDE DAOs (Dibutuhkan untuk membuat Repository)
+    @Provides
+    @Singleton
+    fun provideProductSupplierDao(database: AppDatabase): ProductSupplierDao {
+        return database.productSupplierDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSupplierDao(database: AppDatabase): SupplierDao {
+        return database.supplierDao()
+    }
+
+    // 2. PROVIDE REPOSITORIES
+    @Provides
+    @Singleton
+    fun provideSupplierRepository(supplierDao: SupplierDao): SupplierRepository {
+        return SupplierRepositoryImpl(supplierDao)
+    }
+
     @Provides
     @Singleton
     fun provideProductRepository(productDao: ProductDao): ProductRepository {
@@ -53,10 +63,5 @@ object AppModule {
         authPreferences: AuthPreferences
     ): AuthRepository {
         return AuthRepositoryImpl(userDao, authPreferences)
-    }
-    @Provides
-    @Singleton
-    fun provideProductSupplierDao(database: AppDatabase): ProductSupplierDao {
-        return database.productSupplierDao()
     }
 }
