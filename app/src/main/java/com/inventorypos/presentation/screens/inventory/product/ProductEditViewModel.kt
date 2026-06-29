@@ -2,19 +2,29 @@ package com.inventorypos.presentation.screens.inventory.product
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.model.Category
 import com.inventorypos.domain.model.Product
+import com.inventorypos.domain.repository.CategoryRepository
 import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductEditViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val categoryRepository: CategoryRepository // TAMBAHAN: Injeksi Kategori
 ) : ViewModel() {
     
+    // TAMBAHAN: Mengambil list kategori untuk dropdown edit
+    val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private val _product = MutableStateFlow<Product?>(null)
     val product: StateFlow<Product?> = _product
     
@@ -62,14 +72,14 @@ class ProductEditViewModel @Inject constructor(
         }
     }
     
-    fun onNameChange(value: String) { name.value = value }
-    fun onSkuChange(value: String) { sku.value = value }
-    fun onCategoryChange(value: Long?) { categoryId.value = value }
-    fun onBuyPriceChange(value: String) { buyPrice.value = value }
-    fun onSellPriceChange(value: String) { sellPrice.value = value }
-    fun onStockChange(value: String) { stock.value = value }
-    fun onMinStockChange(value: String) { minStock.value = value }
-    fun onDescriptionChange(value: String) { description.value = value }
+    fun onNameChange(value: String) { name.value = value; _error.value = null }
+    fun onSkuChange(value: String) { sku.value = value; _error.value = null }
+    fun onCategoryChange(value: Long?) { categoryId.value = value; _error.value = null }
+    fun onBuyPriceChange(value: String) { buyPrice.value = value; _error.value = null }
+    fun onSellPriceChange(value: String) { sellPrice.value = value; _error.value = null }
+    fun onStockChange(value: String) { stock.value = value; _error.value = null }
+    fun onMinStockChange(value: String) { minStock.value = value; _error.value = null }
+    fun onDescriptionChange(value: String) { description.value = value; _error.value = null }
     fun onImageSelected(uri: String?) { /* TODO */ }
     
     fun updateProduct(id: Long) {
@@ -78,13 +88,19 @@ class ProductEditViewModel @Inject constructor(
         val stk = stock.value.toIntOrNull()
         val min = minStock.value.toIntOrNull() ?: 5
         
+        if (name.value.isBlank() || sku.value.isBlank()) {
+            _error.value = "Name and SKU cannot be empty"
+            return
+        }
+        
         if (buy == null || sell == null || stk == null) {
-            _error.value = "Invalid numbers"
+            _error.value = "Prices and Stock must be valid numbers"
             return
         }
         
         viewModelScope.launch {
             _isSaving.value = true
+            _error.value = null
             try {
                 val updated = Product(
                     id = id,
@@ -96,7 +112,8 @@ class ProductEditViewModel @Inject constructor(
                     sellPrice = sell,
                     stock = stk,
                     minStock = min,
-                    imageUrl = _product.value?.imageUrl
+                    imageUrl = _product.value?.imageUrl,
+                    isActive = true
                 )
                 productRepository.updateProduct(updated)
                 _isSuccess.value = true
