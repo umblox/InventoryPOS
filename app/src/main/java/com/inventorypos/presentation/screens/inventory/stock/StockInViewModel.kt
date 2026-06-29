@@ -2,6 +2,7 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +10,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class StockInViewModel @Inject constructor() : ViewModel() {
+class StockInViewModel @Inject constructor(
+    private val productRepository: ProductRepository // Injeksi Repository
+) : ViewModel() {
     private val _productSearch = MutableStateFlow("")
     val productSearch: StateFlow<String> = _productSearch
 
@@ -34,14 +37,27 @@ class StockInViewModel @Inject constructor() : ViewModel() {
 
     fun confirmStockIn() {
         if (_productSearch.value.isBlank()) { _error.value = "Product is required"; return }
-        if (_quantity.value.isBlank() || _quantity.value.toIntOrNull() == null || _quantity.value.toInt() <= 0) {
+        val qty = _quantity.value.toIntOrNull()
+        if (qty == null || qty <= 0) {
             _error.value = "Valid quantity is required"; return
         }
+
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(800)
-            _isSuccess.value = true
-            _isLoading.value = false
+            try {
+                // LOGIKA NYATA: Ambil produk berdasarkan nama/sku, lalu tambah stok
+                val product = productRepository.getProductByName(_productSearch.value)
+                if (product != null) {
+                    productRepository.updateStock(product.id, product.stock + qty)
+                    _isSuccess.value = true
+                } else {
+                    _error.value = "Product not found"
+                }
+            } catch (e: Exception) {
+                _error.value = "Failed to update stock"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
