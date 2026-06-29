@@ -2,6 +2,7 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +10,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class StockOutViewModel @Inject constructor() : ViewModel() {
+class StockOutViewModel @Inject constructor(
+    private val productRepository: ProductRepository
+) : ViewModel() {
     private val _productSearch = MutableStateFlow("")
     val productSearch: StateFlow<String> = _productSearch
 
@@ -38,15 +41,29 @@ class StockOutViewModel @Inject constructor() : ViewModel() {
 
     fun confirmStockOut() {
         if (_productSearch.value.isBlank()) { _error.value = "Product is required"; return }
-        if (_quantity.value.isBlank() || _quantity.value.toIntOrNull() == null || _quantity.value.toInt() <= 0) {
-            _error.value = "Valid quantity is required"; return
-        }
+        val qty = _quantity.value.toIntOrNull()
+        if (qty == null || qty <= 0) { _error.value = "Valid quantity is required"; return }
         if (_reason.value.isBlank()) { _error.value = "Reason is required"; return }
+
         viewModelScope.launch {
             _isLoading.value = true
-            kotlinx.coroutines.delay(800)
-            _isSuccess.value = true
-            _isLoading.value = false
+            try {
+                val product = productRepository.getProductByName(_productSearch.value)
+                if (product != null) {
+                    if (product.stock >= qty) {
+                        productRepository.updateStock(product.id, product.stock - qty)
+                        _isSuccess.value = true
+                    } else {
+                        _error.value = "Insufficient stock!"
+                    }
+                } else {
+                    _error.value = "Product not found"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error processing stock out"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
