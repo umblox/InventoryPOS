@@ -15,9 +15,10 @@ import com.inventorypos.data.local.entity.*
         TransactionItemEntity::class,
         CustomerEntity::class,
         StockLogEntity::class,
-        UserPermissionEntity::class // Menambahkan tabel Permission baru
+        ProductSupplierEntity::class,
+        UserPermissionEntity::class
     ],
-    version = 2, // Naikkan versi agar Room memicu pembuatan tabel baru
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -28,5 +29,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun customerDao(): CustomerDao
     abstract fun stockDao(): StockDao
-    abstract fun userPermissionDao(): UserPermissionDao // Mendaftarkan DAO Permission
+    abstract fun productSupplierDao(): ProductSupplierDao
+    abstract fun userPermissionDao(): UserPermissionDao
 }
