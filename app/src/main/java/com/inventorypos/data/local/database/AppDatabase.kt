@@ -30,6 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun customerDao(): CustomerDao
     abstract fun stockDao(): StockDao
+    abstract fun supplierDao(): SupplierDao
     abstract fun productSupplierDao(): ProductSupplierDao
     abstract fun userPermissionDao(): UserPermissionDao
 }
