@@ -10,6 +10,7 @@ import javax.inject.Singleton
 import com.inventorypos.data.local.dao.CategoryDao
 import com.inventorypos.data.local.dao.ProductDao
 import com.inventorypos.data.local.dao.UserDao
+import com.inventorypos.data.local.dao.ProductSupplierDao
 
 // IMPORT LAINNYA
 import com.inventorypos.data.preferences.AuthPreferences
