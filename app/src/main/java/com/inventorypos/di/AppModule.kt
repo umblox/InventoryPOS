@@ -4,7 +4,7 @@ import com.inventorypos.data.local.dao.CategoryDao
 import com.inventorypos.data.local.dao.ProductDao
 import com.inventorypos.domain.repository.CategoryRepository
 import com.inventorypos.data.repository.CategoryRepositoryImpl 
-import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.data.repository.ProductRepository
 
 // PERBAIKAN: Kita kembalikan ini ke domain karena file aslinya terdaftar di sana
 import com.inventorypos.domain.repository.ProductRepositoryImpl
