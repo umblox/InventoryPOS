@@ -148,7 +148,16 @@ fun ProductDetailScreen(
                         StockInfoRow("Unit", product!!.unit, PremiumTextMuted)
                     }
                 }
-                
+
+                // Di dalam Column, setelah stock info:
+CustomButton(
+    text = "Manage Suppliers",
+    onClick = { navController.navigate(Screen.ProductSuppliers.createRoute(productId)) },
+    modifier = Modifier.fillMaxWidth(),
+    icon = Icons.Default.LocalShipping,
+    containerColor = PremiumInfo
+)
+
                 // Description
                 if (!product!!.description.isNullOrBlank()) {
                     GradientCard {
