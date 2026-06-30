@@ -67,4 +67,11 @@ object AppModule {
     fun provideCustomerRepository(customerDao: CustomerDao): CustomerRepository {
         return CustomerRepositoryImpl(customerDao)
     }
+
+    // ➕ TAMBAHAN: StockRepository
+    @Provides
+    @Singleton
+    fun provideStockRepository(stockDao: StockDao): StockRepository {
+        return StockRepositoryImpl(stockDao)
+    }
 }
