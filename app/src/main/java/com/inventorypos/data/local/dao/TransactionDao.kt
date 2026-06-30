@@ -14,10 +14,12 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getById(id: Long): TransactionEntity?
     
-    @Query("SELECT * FROM transactions WHERE DATE(createdAt) = DATE('now') ORDER BY createdAt DESC")
+    // DIPERBAIKI: Menggunakan date(createdAt / 1000, 'unixepoch', 'localtime')
+    @Query("SELECT * FROM transactions WHERE date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime') ORDER BY createdAt DESC")
     fun getTodayTransactions(): Flow<List<TransactionEntity>>
     
-    @Query("SELECT SUM(finalAmount) FROM transactions WHERE DATE(createdAt) = DATE('now') AND paymentStatus = 'PAID'")
+    // DIPERBAIKI: Menggunakan date(createdAt / 1000, 'unixepoch', 'localtime')
+    @Query("SELECT SUM(finalAmount) FROM transactions WHERE date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime') AND paymentStatus = 'PAID'")
     fun getTodaySales(): Flow<Double?>
     
     @Insert
@@ -37,7 +39,8 @@ interface TransactionDao {
         return transactionId
     }
     
-    @Query("SELECT COUNT(*) FROM transactions WHERE DATE(createdAt) = DATE('now')")
+    // DIPERBAIKI: Menggunakan date(createdAt / 1000, 'unixepoch', 'localtime')
+    @Query("SELECT COUNT(*) FROM transactions WHERE date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime')")
     fun getTodayTransactionCount(): Flow<Int>
 }
 
