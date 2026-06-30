@@ -19,19 +19,20 @@ interface StockDao {
     @Insert
     suspend fun insertLog(log: StockLogEntity): Long
     
+    // DIPERBAIKI: Konversi milidetik ke detik (/ 1000) dan sesuaikan zona waktu
     @Query("""
         SELECT SUM(quantity) FROM stock_logs 
-        WHERE productId = :productId AND type = 'IN' AND date(createdAt) = date('now')
+        WHERE productId = :productId AND type = 'IN' AND date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime')
     """)
     suspend fun getTodayStockIn(productId: Long): Int?
     
+    // DIPERBAIKI: Konversi milidetik ke detik (/ 1000) dan sesuaikan zona waktu
     @Query("""
         SELECT SUM(quantity) FROM stock_logs 
-        WHERE productId = :productId AND type = 'OUT' AND date(createdAt) = date('now')
+        WHERE productId = :productId AND type = 'OUT' AND date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime')
     """)
     suspend fun getTodayStockOut(productId: Long): Int?
     
-    // ➕ TAMBAHAN: Get logs with product name (for display)
     @Query("""
         SELECT sl.*, p.name as productName 
         FROM stock_logs sl
