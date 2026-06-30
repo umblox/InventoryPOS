@@ -2,18 +2,23 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.entity.StockLogEntity
+import com.inventorypos.data.local.entity.StockLogType
 import com.inventorypos.domain.model.Product
 import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class StockAdjustmentViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -58,7 +63,7 @@ class StockAdjustmentViewModel @Inject constructor(
     
     fun selectProduct(product: Product) { 
         _selectedProduct.value = product
-        _currentStock.value = product.stock.toString() // Otomatis set stok saat ini
+        _currentStock.value = product.stock.toString()
         _searchQuery.value = "" 
     }
     
@@ -80,18 +85,31 @@ class StockAdjustmentViewModel @Inject constructor(
         
         val newQty = _newStock.value.toIntOrNull()
         if (newQty == null || newQty < 0) { _error.value = "Valid new stock quantity is required"; return }
-        
         if (newQty == product.stock) { _error.value = "New stock is exactly the same as current stock"; return }
         if (_reason.value.isBlank()) { _error.value = "Reason is required"; return }
 
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Update stok menjadi nilai mutlak yang baru (New Stock)
+                // 1. Update stok
                 val updatedProduct = product.copy(stock = newQty)
                 productRepository.updateProduct(updatedProduct)
                 
-                // TODO: Log ke StockLogEntity (nanti)
+                // 2. Insert log adjustment
+                val diff = newQty - product.stock
+                stockRepository.insertLog(
+                    StockLogEntity(
+                        productId = product.id,
+                        type = StockLogType.ADJUSTMENT,
+                        quantity = kotlin.math.abs(diff),
+                        previousStock = product.stock,
+                        newStock = newQty,
+                        reference = _reason.value,
+                        notes = _notes.value.ifBlank { null },
+                        userId = 0, // TODO: Ambil dari user login
+                        createdAt = Date()
+                    )
+                )
                 
                 _isSuccess.value = true
             } catch (e: Exception) {
