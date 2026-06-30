@@ -140,23 +140,19 @@ fun ProductDetailScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        StockInfoRow("Current Stock", product!!.stock.toString(), 
-                            if (product!!.stock <= 0) PremiumError 
-                            else if (product!!.stock <= product!!.minStock) PremiumWarning 
-                            else PremiumSuccess)
-                        StockInfoRow("Minimum Stock", product!!.minStock.toString(), PremiumTextMuted)
+                        StockInfoRow(
+                            label = "Current Stock",
+                            value = "${product!!.stock} ${product!!.unit}",
+                            valueColor = when {
+                                product!!.stock <= 0 -> PremiumError
+                                product!!.stock <= product!!.minStock -> PremiumWarning
+                                else -> PremiumSuccess
+                            }
+                        )
+                        StockInfoRow("Minimum Stock", "${product!!.minStock} ${product!!.unit}", PremiumTextMuted)
                         StockInfoRow("Unit", product!!.unit, PremiumTextMuted)
                     }
                 }
-
-                // Di dalam Column, setelah stock info:
-CustomButton(
-    text = "Manage Suppliers",
-    onClick = { navController.navigate(Screen.ProductSuppliers.createRoute(productId)) },
-    modifier = Modifier.fillMaxWidth(),
-    icon = Icons.Default.LocalShipping,
-    containerColor = PremiumInfo
-)
 
                 // Description
                 if (!product!!.description.isNullOrBlank()) {
@@ -175,6 +171,46 @@ CustomButton(
                                 color = PremiumTextSecondary
                             )
                         }
+                    }
+                }
+
+                // Suppliers Section
+                GradientCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocalShipping,
+                                contentDescription = null,
+                                tint = PremiumInfo,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Suppliers",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = PremiumTextPrimary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "${product!!.supplierCount} supplier(s) connected",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PremiumTextMuted
+                                )
+                            }
+                        }
+                        CustomButton(
+                            text = "Manage",
+                            onClick = { navController.navigate(Screen.ProductSuppliers.createRoute(productId)) },
+                            icon = Icons.Default.ArrowForward,
+                            containerColor = PremiumInfo
+                        )
                     }
                 }
                 
