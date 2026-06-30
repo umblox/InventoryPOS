@@ -23,7 +23,6 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context
     ): AppDatabase {
-        // Kita simpan instance sementara agar bisa dipanggil di dalam Callback
         var dbInstance: AppDatabase? = null
         
         dbInstance = Room.databaseBuilder(
@@ -35,7 +34,6 @@ object DatabaseModule {
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // Masukkan akun super admin otomatis saat database baru dibuat
                     CoroutineScope(Dispatchers.IO).launch {
                         dbInstance?.userDao()?.insert(
                             com.inventorypos.data.local.entity.UserEntity(
@@ -55,6 +53,8 @@ object DatabaseModule {
         return dbInstance
     }
 
+    // ===== DAO PROVIDERS =====
+    
     @Provides
     fun provideUserPermissionDao(db: AppDatabase) = db.userPermissionDao()
     
@@ -75,4 +75,12 @@ object DatabaseModule {
     
     @Provides
     fun provideStockDao(db: AppDatabase) = db.stockDao()
+    
+    // ➕ TAMBAHAN: SupplierDao (dibutuhkan AppModule)
+    @Provides
+    fun provideSupplierDao(db: AppDatabase) = db.supplierDao()
+    
+    // ➕ TAMBAHAN: ProductSupplierDao (dibutuhkan Smart PO)
+    @Provides
+    fun provideProductSupplierDao(db: AppDatabase) = db.productSupplierDao()
 }
