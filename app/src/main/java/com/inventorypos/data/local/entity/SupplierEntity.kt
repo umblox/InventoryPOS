@@ -7,7 +7,7 @@ import java.util.Date
 @Entity(tableName = "suppliers")
 data class SupplierEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    val id: Long = 0L,
     val name: String,
     val phone: String? = null,
     val email: String? = null,
