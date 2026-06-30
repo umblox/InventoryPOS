@@ -2,18 +2,23 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.entity.StockLogEntity
+import com.inventorypos.data.local.entity.StockLogType
 import com.inventorypos.domain.model.Product
 import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class StockOpnameViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -79,9 +84,26 @@ class StockOpnameViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Update ke stok fisik hasil temuan
+                // 1. Update stok ke hasil fisik
                 val updatedProduct = product.copy(stock = physicalQty)
                 productRepository.updateProduct(updatedProduct)
+                
+                // 2. Insert log opname
+                val diff = physicalQty - product.stock
+                stockRepository.insertLog(
+                    StockLogEntity(
+                        productId = product.id,
+                        type = StockLogType.OPNAME,
+                        quantity = kotlin.math.abs(diff),
+                        previousStock = product.stock,
+                        newStock = physicalQty,
+                        reference = "Stock Opname",
+                        notes = _notes.value.ifBlank { null },
+                        userId = 0, // TODO: Ambil dari user login
+                        createdAt = Date()
+                    )
+                )
+                
                 _isSuccess.value = true
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to process opname"
