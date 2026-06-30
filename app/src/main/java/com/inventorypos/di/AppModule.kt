@@ -18,8 +18,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSupplierRepository(supplierDao: SupplierDao): SupplierRepository {
-        return SupplierRepositoryImpl(supplierDao)
+    fun provideSupplierRepository(
+        supplierDao: SupplierDao,
+        productSupplierDao: ProductSupplierDao
+    ): SupplierRepository {
+        return SupplierRepositoryImpl(supplierDao, productSupplierDao)
     }
 
     @Provides
