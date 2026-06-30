@@ -3,6 +3,7 @@ package com.inventorypos.data.local.dao
 import androidx.room.*
 import com.inventorypos.data.local.entity.ProductSupplierEntity
 import com.inventorypos.data.local.entity.SupplierWithPrice
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductSupplierDao {
@@ -26,7 +27,7 @@ interface ProductSupplierDao {
         INNER JOIN product_suppliers ps ON s.id = ps.supplierId 
         WHERE ps.productId = :productId AND s.isActive = 1
     """)
-    fun getSuppliersForProductFlow(productId: Long): kotlinx.coroutines.flow.Flow<List<SupplierWithPrice>>
+    fun getSuppliersForProductFlow(productId: Long): Flow<List<SupplierWithPrice>>
 
     @Query("DELETE FROM product_suppliers WHERE productId = :productId AND supplierId = :supplierId")
     suspend fun deleteProductSupplier(productId: Long, supplierId: Long)
@@ -36,9 +37,6 @@ interface ProductSupplierDao {
 
     @Query("UPDATE product_suppliers SET isPrimary = 1 WHERE productId = :productId AND supplierId = :supplierId")
     suspend fun setPrimarySupplier(productId: Long, supplierId: Long)
-
-    @Query("SELECT * FROM product_suppliers WHERE productId = :productId")
-    suspend fun getAllForProduct(productId: Long): List<ProductSupplierEntity>
 
     @Transaction
     suspend fun updatePrimarySupplier(productId: Long, supplierId: Long) {
