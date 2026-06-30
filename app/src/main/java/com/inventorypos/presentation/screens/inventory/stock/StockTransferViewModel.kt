@@ -2,18 +2,23 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.entity.StockLogEntity
+import com.inventorypos.data.local.entity.StockLogType
 import com.inventorypos.domain.model.Product
 import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class StockTransferViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository // Ditambahkan injeksi StockRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -86,6 +91,21 @@ class StockTransferViewModel @Inject constructor(
             try {
                 // Total stok aplikasi tetap sama (hanya pindah rak/gudang). 
                 // TODO: Saat Multi-Branch diaktifkan, kita akan mengurangi stok di Location A dan menambah di Location B.
+                
+                // 1. Insert log transfer
+                stockRepository.insertLog(
+                    StockLogEntity(
+                        productId = product.id,
+                        type = StockLogType.TRANSFER, // Pastikan tipe enum TRANSFER (atau sejenisnya) sudah ada di class StockLogType
+                        quantity = qty,
+                        previousStock = product.stock,
+                        newStock = product.stock, // Karena saat ini sistemnya belum multi-branch, total stok tetap sama
+                        reference = "Transfer: ${_fromLocation.value} -> ${_toLocation.value}",
+                        notes = _notes.value.ifBlank { null },
+                        userId = 0, // TODO: Ambil dari user login
+                        createdAt = Date()
+                    )
+                )
                 
                 _isSuccess.value = true
             } catch (e: Exception) {
