@@ -30,4 +30,18 @@ interface StockDao {
         WHERE productId = :productId AND type = 'OUT' AND date(createdAt) = date('now')
     """)
     suspend fun getTodayStockOut(productId: Long): Int?
+    
+    // ➕ TAMBAHAN: Get logs with product name (for display)
+    @Query("""
+        SELECT sl.*, p.name as productName 
+        FROM stock_logs sl
+        INNER JOIN products p ON sl.productId = p.id
+        ORDER BY sl.createdAt DESC LIMIT 100
+    """)
+    fun getRecentLogsWithProduct(): Flow<List<StockLogWithProduct>>
 }
+
+data class StockLogWithProduct(
+    @Embedded val log: StockLogEntity,
+    val productName: String
+)
