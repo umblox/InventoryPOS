@@ -2,18 +2,23 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.entity.StockLogEntity
+import com.inventorypos.data.local.entity.StockLogType
 import com.inventorypos.domain.model.Product
 import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class StockOutViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -65,23 +70,30 @@ class StockOutViewModel @Inject constructor(
         
         val qty = _quantity.value.toIntOrNull()
         if (qty == null || qty <= 0) { _error.value = "Valid quantity is required"; return }
-        
-        // Validasi ekstra: Cegah stok menjadi minus
-        if (product.stock < qty) { 
-            _error.value = "Insufficient stock. Current stock is ${product.stock}"; 
-            return 
-        }
-        
+        if (product.stock < qty) { _error.value = "Insufficient stock. Current stock is ${product.stock}"; return }
         if (_reason.value.isBlank()) { _error.value = "Reason is required"; return }
 
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Update stok di database
+                // 1. Update stok
                 val updatedProduct = product.copy(stock = product.stock - qty)
                 productRepository.updateProduct(updatedProduct)
                 
-                // TODO: Log ke StockLogEntity (nanti saat tabel Log sudah selesai)
+                // 2. Insert log stok keluar
+                stockRepository.insertLog(
+                    StockLogEntity(
+                        productId = product.id,
+                        type = StockLogType.OUT,
+                        quantity = qty,
+                        previousStock = product.stock,
+                        newStock = product.stock - qty,
+                        reference = _reason.value,
+                        notes = _notes.value.ifBlank { null },
+                        userId = 0, // TODO: Ambil dari user login
+                        createdAt = Date()
+                    )
+                )
                 
                 _isSuccess.value = true
             } catch (e: Exception) {
