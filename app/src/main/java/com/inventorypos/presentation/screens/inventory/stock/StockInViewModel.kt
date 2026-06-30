@@ -2,30 +2,32 @@ package com.inventorypos.presentation.screens.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventorypos.data.local.entity.StockLogEntity
+import com.inventorypos.data.local.entity.StockLogType
 import com.inventorypos.domain.model.Product
 import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class StockInViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    // Otomatis mencari produk di database jika teks > 2 huruf
     val searchResults: StateFlow<List<Product>> = _searchQuery
         .debounce(300)
         .flatMapLatest { query ->
             if (query.length > 2) {
-                // Asumsi: Anda akan butuh fungsi ini di ProductRepository. 
-                // Jika belum ada, sementara kita ambil semua lalu filter lokal.
                 productRepository.getAllProducts().map { list ->
                     list.filter { it.name.contains(query, ignoreCase = true) || it.sku.contains(query, ignoreCase = true) }
                 }
@@ -72,7 +74,20 @@ class StockInViewModel @Inject constructor(
                 val updatedProduct = product.copy(stock = product.stock + qty)
                 productRepository.updateProduct(updatedProduct)
                 
-                // TODO: 2. Insert ke StockDao (StockLogEntity) nanti saat struktur tabel Log Anda sudah fix
+                // 2. Insert log stok masuk
+                stockRepository.insertLog(
+                    StockLogEntity(
+                        productId = product.id,
+                        type = StockLogType.IN,
+                        quantity = qty,
+                        previousStock = product.stock,
+                        newStock = product.stock + qty,
+                        reference = "Stock In",
+                        notes = _notes.value.ifBlank { null },
+                        userId = 0, // TODO: Ambil dari user login
+                        createdAt = Date()
+                    )
+                )
                 
                 _isSuccess.value = true
             } catch (e: Exception) {
