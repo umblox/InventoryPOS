@@ -101,7 +101,16 @@ fun AppNavigation(navController: NavHostController) {
             val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
             ProductDeleteDialog(navController, productId)
         }
-        
+
+        // Product Suppliers
+composable(
+    route = Screen.ProductSuppliers.route,
+    arguments = listOf(navArgument("productId") { type = NavType.LongType })
+) { backStackEntry ->
+    val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
+    ProductSupplierScreen(navController, productId)
+}
+
         // === CATEGORY SCREENS (SEPARATE FILES) ===
         composable(Screen.CategoryList.route) {
             CategoryListScreen(navController)
