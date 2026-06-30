@@ -25,19 +25,21 @@ import com.inventorypos.data.repository.*
 object AppModule {
     
     // 1. PROVIDE DAOs (Dibutuhkan untuk membuat Repository)
-    @Provides
-    @Singleton
-    fun provideProductSupplierDao(database: AppDatabase): ProductSupplierDao {
-        return database.productSupplierDao()
-    }
+    // ⬇️ BISA DIHAPUS karena sudah ada di DatabaseModule.kt
+    // @Provides
+    // @Singleton
+    // fun provideProductSupplierDao(database: AppDatabase): ProductSupplierDao {
+    //     return database.productSupplierDao()
+    // }
 
-    @Provides
-    @Singleton
-    fun provideSupplierDao(database: AppDatabase): SupplierDao {
-        return database.supplierDao()
-    }
+    // @Provides
+    // @Singleton
+    // fun provideSupplierDao(database: AppDatabase): SupplierDao {
+    //     return database.supplierDao()
+    // }
 
     // 2. PROVIDE REPOSITORIES
+    
     @Provides
     @Singleton
     fun provideSupplierRepository(supplierDao: SupplierDao): SupplierRepository {
@@ -63,5 +65,30 @@ object AppModule {
         authPreferences: AuthPreferences
     ): AuthRepository {
         return AuthRepositoryImpl(userDao, authPreferences)
+    }
+
+    // ➕ TAMBAHAN: TransactionRepository (untuk POS/checkout)
+    @Provides
+    @Singleton
+    fun provideTransactionRepository(
+        transactionDao: TransactionDao,
+        productDao: ProductDao,
+        stockDao: StockDao
+    ): TransactionRepository {
+        return TransactionRepositoryImpl(transactionDao, productDao, stockDao)
+    }
+
+    // ➕ TAMBAHAN: UserRepository (untuk user management)
+    @Provides
+    @Singleton
+    fun provideUserRepository(userDao: UserDao): UserRepository {
+        return UserRepositoryImpl(userDao)
+    }
+
+    // ➕ TAMBAHAN: CustomerRepository (untuk customer management)
+    @Provides
+    @Singleton
+    fun provideCustomerRepository(customerDao: CustomerDao): CustomerRepository {
+        return CustomerRepositoryImpl(customerDao)
     }
 }
