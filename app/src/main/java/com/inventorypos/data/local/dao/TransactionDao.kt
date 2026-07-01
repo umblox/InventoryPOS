@@ -27,6 +27,9 @@ interface TransactionDao {
     
     @Insert
     suspend fun insertTransactionItems(items: List<TransactionItemEntity>)
+
+    @Update
+    suspend fun updateTransaction(transaction: TransactionEntity)
     
     @Transaction
     suspend fun insertTransactionWithItems(
