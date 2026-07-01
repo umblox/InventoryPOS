@@ -38,6 +38,9 @@ interface ProductSupplierDao {
     @Query("UPDATE product_suppliers SET isPrimary = 1 WHERE productId = :productId AND supplierId = :supplierId")
     suspend fun setPrimarySupplier(productId: Long, supplierId: Long)
 
+    @Query("UPDATE product_suppliers SET buyPrice = :newPrice, lastUpdated = :date WHERE productId = :productId AND supplierId = :supplierId")
+    suspend fun updateBuyPrice(productId: Long, supplierId: Long, newPrice: Double, date: java.util.Date)
+    
     @Transaction
     suspend fun updatePrimarySupplier(productId: Long, supplierId: Long) {
         clearPrimarySupplier(productId)
