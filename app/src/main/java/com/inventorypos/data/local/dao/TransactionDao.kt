@@ -11,14 +11,16 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY createdAt DESC")
     fun getAll(): Flow<List<TransactionWithItems>>
     
+    // --- DIPERBAIKI: Tambah @Transaction dan ubah menjadi TransactionWithItems? ---
+    @Transaction
     @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getById(id: Long): TransactionEntity?
+    suspend fun getById(id: Long): TransactionWithItems?
     
-    // DIPERBAIKI: Menggunakan date(createdAt / 1000, 'unixepoch', 'localtime')
+    // --- DIPERBAIKI: Tambah @Transaction dan ubah menjadi Flow<List<TransactionWithItems>> ---
+    @Transaction
     @Query("SELECT * FROM transactions WHERE date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime') ORDER BY createdAt DESC")
-    fun getTodayTransactions(): Flow<List<TransactionEntity>>
+    fun getTodayTransactions(): Flow<List<TransactionWithItems>>
     
-    // DIPERBAIKI: Menggunakan date(createdAt / 1000, 'unixepoch', 'localtime')
     @Query("SELECT SUM(finalAmount) FROM transactions WHERE date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime') AND paymentStatus = 'PAID'")
     fun getTodaySales(): Flow<Double?>
     
@@ -42,11 +44,11 @@ interface TransactionDao {
         return transactionId
     }
     
-    // DIPERBAIKI: Menggunakan date(createdAt / 1000, 'unixepoch', 'localtime')
     @Query("SELECT COUNT(*) FROM transactions WHERE date(createdAt / 1000, 'unixepoch', 'localtime') = date('now', 'localtime')")
     fun getTodayTransactionCount(): Flow<Int>
 }
 
+// Biarkan data class ini tetap di sini karena Anda sudah menggunakan import jalur DAO
 data class TransactionWithItems(
     @Embedded val transaction: TransactionEntity,
     @Relation(
