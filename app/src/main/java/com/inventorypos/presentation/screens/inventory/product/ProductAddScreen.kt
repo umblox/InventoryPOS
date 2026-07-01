@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.inventorypos.domain.model.Category
+import com.inventorypos.domain.model.Supplier
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.theme.*
 
@@ -31,14 +32,15 @@ fun ProductAddScreen(
     val name by viewModel.name.collectAsState()
     val sku by viewModel.sku.collectAsState()
     val categoryId by viewModel.categoryId.collectAsState()
+    val supplierId by viewModel.supplierId.collectAsState() // <--- TANGKAP STATE SUPPLIER
     val buyPrice by viewModel.buyPrice.collectAsState()
     val sellPrice by viewModel.sellPrice.collectAsState()
     val stock by viewModel.stock.collectAsState()
     val minStock by viewModel.minStock.collectAsState()
     val description by viewModel.description.collectAsState()
     
-    // MENANGKAP LIST KATEGORI DARI VIEWMODEL
     val categories by viewModel.categories.collectAsState()
+    val suppliers by viewModel.suppliers.collectAsState() // <--- TANGKAP LIST SUPPLIER
     
     val isLoading by viewModel.isLoading.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
@@ -75,8 +77,6 @@ fun ProductAddScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Product Image Placeholder (Pastikan komponen ini sudah ada di project Anda)
-                // ProductImagePicker(onImageSelected = viewModel::onImageSelected)
                 
                 SectionHeader(icon = Icons.Default.Info, title = "Basic Information")
                 
@@ -100,14 +100,13 @@ fun ProductAddScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
                 
-                // MENGIRIM LIST KATEGORI KE DROPDOWN
                 CategoryDropdown(
                     categories = categories,
                     selectedCategoryId = categoryId,
                     onCategorySelected = viewModel::onCategoryChange
                 )
                 
-                SectionHeader(icon = Icons.Default.AttachMoney, title = "Pricing")
+                SectionHeader(icon = Icons.Default.AttachMoney, title = "Pricing & Supplier")
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -132,6 +131,13 @@ fun ProductAddScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
+
+                // <--- DROPDOWN UNTUK SUPPLIER DITAMBAHKAN DI SINI
+                SupplierDropdown(
+                    suppliers = suppliers,
+                    selectedSupplierId = supplierId,
+                    onSupplierSelected = viewModel::onSupplierChange
+                )
                 
                 SectionHeader(icon = Icons.Default.Inventory, title = "Stock Management")
                 
@@ -193,8 +199,6 @@ fun ProductAddScreen(
     }
 }
 
-// === KOMPONEN DIPISAH AGAR BERSIH ===
-
 @Composable
 fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
     Row(
@@ -210,19 +214,14 @@ fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryDropdown(
-    categories: List<Category>, // Menerima list dari database
+    categories: List<Category>,
     selectedCategoryId: Long?,
     onCategorySelected: (Long) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
-    // Mencari nama kategori yang sedang dipilih, atau tampilkan default
     val selectedCategoryName = categories.find { it.id == selectedCategoryId }?.name ?: "Select Category"
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
         OutlinedTextField(
             value = selectedCategoryName,
             onValueChange = {},
@@ -231,30 +230,62 @@ fun CategoryDropdown(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PremiumGold,
-                unfocusedBorderColor = PremiumDarkSurface,
-                focusedTextColor = PremiumTextPrimary,
-                unfocusedTextColor = PremiumTextPrimary
+                focusedBorderColor = PremiumGold, unfocusedBorderColor = PremiumDarkSurface,
+                focusedTextColor = PremiumTextPrimary, unfocusedTextColor = PremiumTextPrimary
             )
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(PremiumDarkSurface)
-        ) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(PremiumDarkSurface)) {
             if (categories.isEmpty()) {
-                DropdownMenuItem(
-                    text = { Text("No Categories Available", color = PremiumTextMuted) },
-                    onClick = { expanded = false }
-                )
+                DropdownMenuItem(text = { Text("No Categories Available", color = PremiumTextMuted) }, onClick = { expanded = false })
             } else {
                 categories.forEach { category ->
                     DropdownMenuItem(
                         text = { Text(category.name, color = PremiumTextPrimary) },
-                        onClick = { 
-                            onCategorySelected(category.id) 
-                            expanded = false 
-                        }
+                        onClick = { onCategorySelected(category.id); expanded = false }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// <--- KOMPONEN BARU UNTUK DROPDOWN SUPPLIER
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SupplierDropdown(
+    suppliers: List<Supplier>,
+    selectedSupplierId: Long?,
+    onSupplierSelected: (Long) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedSupplierName = suppliers.find { it.id == selectedSupplierId }?.name ?: "Select Primary Supplier (Optional)"
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        OutlinedTextField(
+            value = selectedSupplierName,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Primary Supplier", color = PremiumTextSecondary) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PremiumGold, unfocusedBorderColor = PremiumDarkSurface,
+                focusedTextColor = PremiumTextPrimary, unfocusedTextColor = PremiumTextPrimary
+            )
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(PremiumDarkSurface)) {
+            if (suppliers.isEmpty()) {
+                DropdownMenuItem(text = { Text("No Suppliers Available", color = PremiumTextMuted) }, onClick = { expanded = false })
+            } else {
+                // Opsi tambahan untuk mengosongkan/membatalkan pilihan supplier
+                DropdownMenuItem(
+                    text = { Text("-- No Supplier --", color = PremiumTextMuted) },
+                    onClick = { onSupplierSelected(-1L); expanded = false } // -1L atau null handling di luar
+                )
+                suppliers.forEach { supplier ->
+                    DropdownMenuItem(
+                        text = { Text(supplier.name, color = PremiumTextPrimary) },
+                        onClick = { onSupplierSelected(supplier.id); expanded = false }
                     )
                 }
             }
