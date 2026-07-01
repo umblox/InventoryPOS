@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventorypos.domain.model.Category
 import com.inventorypos.domain.model.Product
+import com.inventorypos.domain.model.Supplier
 import com.inventorypos.domain.repository.CategoryRepository
 import com.inventorypos.domain.repository.ProductRepository
+import com.inventorypos.domain.repository.SupplierRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,11 +16,19 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductAddViewModel @Inject constructor(
     private val productRepository: ProductRepository,
-    private val categoryRepository: CategoryRepository // MENGINJEKSI CATEGORY REPOSITORY
+    private val categoryRepository: CategoryRepository,
+    private val supplierRepository: SupplierRepository // <--- INJEKSI BARU
 ) : ViewModel() {
     
-    // Menarik daftar kategori asli dari database secara reaktif
     val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    // <--- TARIK DATA SUPPLIER DARI DATABASE
+    val suppliers: StateFlow<List<Supplier>> = supplierRepository.getAllSuppliers()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -33,6 +43,10 @@ class ProductAddViewModel @Inject constructor(
     
     private val _categoryId = MutableStateFlow<Long?>(null)
     val categoryId: StateFlow<Long?> = _categoryId
+
+    // <--- STATE UNTUK MENYIMPAN PILIHAN SUPPLIER
+    private val _supplierId = MutableStateFlow<Long?>(null)
+    val supplierId: StateFlow<Long?> = _supplierId
     
     private val _buyPrice = MutableStateFlow("")
     val buyPrice: StateFlow<String> = _buyPrice
@@ -61,6 +75,7 @@ class ProductAddViewModel @Inject constructor(
     fun onNameChange(value: String) { _name.value = value; _error.value = null }
     fun onSkuChange(value: String) { _sku.value = value; _error.value = null }
     fun onCategoryChange(value: Long?) { _categoryId.value = value; _error.value = null }
+    fun onSupplierChange(value: Long?) { _supplierId.value = value; _error.value = null } // <--- FUNGSI BARU
     fun onBuyPriceChange(value: String) { _buyPrice.value = value; _error.value = null }
     fun onSellPriceChange(value: String) { _sellPrice.value = value; _error.value = null }
     fun onStockChange(value: String) { _stock.value = value; _error.value = null }
@@ -101,9 +116,22 @@ class ProductAddViewModel @Inject constructor(
                     sellPrice = sellPrice,
                     stock = stock,
                     minStock = minStock,
-                    isActive = true // Memastikan produk aktif saat dibuat
+                    isActive = true 
                 )
-                productRepository.addProduct(product)
+                
+                // 1. SIMPAN PRODUK & TANGKAP ID BARUNYA
+                val newProductId = productRepository.addProduct(product)
+                
+                // 2. JIKA ADA SUPPLIER YANG DIPILIH, LANGSUNG HUBUNGKAN!
+                _supplierId.value?.let { selectedSupplierId ->
+                    supplierRepository.addSupplierToProduct(
+                        productId = newProductId,
+                        supplierId = selectedSupplierId,
+                        buyPrice = buyPrice, // Menggunakan harga modal (buy price) yang baru diinput
+                        isPrimary = true     // Karena ditambahkan di awal, jadikan Primary otomatis
+                    )
+                }
+                
                 _isSuccess.value = true
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to save product"
