@@ -85,3 +85,38 @@ class ProductSupplierViewModel @Inject constructor(
         _showAddDialog.value = false
     }
 }
+    // 1. TAMBAHKAN VARIABEL STATE INI DI BAGIAN ATAS (di bawah _showAddDialog)
+    private val _showEditDialog = MutableStateFlow(false)
+    val showEditDialog: StateFlow<Boolean> = _showEditDialog
+
+    private val _editingSupplier = MutableStateFlow<SupplierOffer?>(null)
+    val editingSupplier: StateFlow<SupplierOffer?> = _editingSupplier
+
+    // 2. TAMBAHKAN FUNGSI-FUNGSI INI DI BAGIAN BAWAH
+    fun onShowEditDialog(offer: SupplierOffer) {
+        _editingSupplier.value = offer
+        _showEditDialog.value = true
+    }
+
+    fun onDismissEditDialog() {
+        _showEditDialog.value = false
+        _editingSupplier.value = null
+    }
+
+    fun updateSupplierPrice(productId: Long, supplierId: Long, newPrice: Double) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                supplierRepository.updateSupplierPriceForProduct(productId, supplierId, newPrice)
+                _showEditDialog.value = false
+                _editingSupplier.value = null
+                
+                // Gunakan blok try-finally seperti yang kita pelajari sebelumnya agar loading terjamin berhenti
+                val updatedSuppliers = supplierRepository.getSuppliersForProduct(productId)
+                _suppliers.value = updatedSuppliers
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
