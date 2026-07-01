@@ -9,7 +9,7 @@ import com.inventorypos.data.local.entity.StockLogEntity
 import com.inventorypos.data.local.entity.StockLogType
 import com.inventorypos.data.local.entity.TransactionEntity
 import com.inventorypos.data.local.entity.TransactionItemEntity
-import com.inventorypos.data.local.entity.TransactionWithItems
+import com.inventorypos.data.local.dao.TransactionWithItems // Gabungan
 import com.inventorypos.domain.model.Transaction
 import com.inventorypos.domain.model.TransactionItem
 import com.inventorypos.domain.repository.TransactionRepository
