@@ -32,7 +32,10 @@ fun ProductSupplierScreen(
     val suppliers by viewModel.suppliers.collectAsState()
     val allSuppliers by viewModel.allSuppliers.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    
     val showAddDialog by viewModel.showAddDialog.collectAsState()
+    val showEditDialog by viewModel.showEditDialog.collectAsState()
+    val editingSupplier by viewModel.editingSupplier.collectAsState()
 
     Scaffold(
         topBar = {
@@ -76,6 +79,7 @@ fun ProductSupplierScreen(
                         SupplierOfferCard(
                             offer = offer,
                             onSetPrimary = { viewModel.setPrimary(productId, offer.supplierId) },
+                            onEdit = { viewModel.onShowEditDialog(offer) }, // Panggilan onEdit sudah aman
                             onDelete = { viewModel.removeSupplier(productId, offer.supplierId) }
                         )
                     }
@@ -83,12 +87,24 @@ fun ProductSupplierScreen(
             }
         }
 
+        // Dialog Tambah Supplier
         if (showAddDialog) {
             AddSupplierDialog(
                 availableSuppliers = allSuppliers,
                 onDismiss = { viewModel.onDismissDialog() },
                 onConfirm = { supplierId, buyPrice, isPrimary ->
                     viewModel.addSupplier(productId, supplierId, buyPrice, isPrimary)
+                }
+            )
+        }
+
+        // Dialog Edit Harga Supplier
+        if (showEditDialog && editingSupplier != null) {
+            EditSupplierPriceDialog(
+                offer = editingSupplier!!,
+                onDismiss = { viewModel.onDismissEditDialog() },
+                onConfirm = { newPrice ->
+                    viewModel.updateSupplierPrice(productId, editingSupplier!!.supplierId, newPrice)
                 }
             )
         }
@@ -99,6 +115,7 @@ fun ProductSupplierScreen(
 fun SupplierOfferCard(
     offer: SupplierOffer,
     onSetPrimary: () -> Unit,
+    onEdit: () -> Unit, // <--- PERBAIKAN: Parameter onEdit ditambahkan ke deklarasi komponen
     onDelete: () -> Unit
 ) {
     Card(
@@ -149,6 +166,10 @@ fun SupplierOfferCard(
                         Icon(Icons.Default.Star, "Set Primary", tint = PremiumGold)
                     }
                 }
+                // <--- PERBAIKAN: Tombol Edit ditambahkan ke UI
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, "Edit Price", tint = PremiumInfo)
+                }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, "Delete", tint = PremiumError)
                 }
@@ -157,6 +178,7 @@ fun SupplierOfferCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSupplierDialog(
     availableSuppliers: List<Supplier>,
@@ -239,6 +261,54 @@ fun AddSupplierDialog(
                     }
                 },
                 enabled = selectedSupplier != null && buyPrice.isNotBlank()
+            )
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancel", color = PremiumTextSecondary)
+            }
+        }
+    )
+}
+
+// <--- PERBAIKAN: Komponen Dialog Edit Harga ditambahkan
+@Composable
+fun EditSupplierPriceDialog(
+    offer: SupplierOffer,
+    onDismiss: () -> Unit,
+    onConfirm: (newPrice: Double) -> Unit
+) {
+    // Otomatis terisi dengan harga lama
+    var buyPrice by remember { mutableStateOf(offer.buyPrice.toLong().toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = PremiumDarkSurface,
+        title = { Text("Edit Price", color = PremiumGold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Supplier: ${offer.supplierName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PremiumTextPrimary
+                )
+                CustomTextField(
+                    value = buyPrice,
+                    onValueChange = { buyPrice = it },
+                    label = "New Buy Price",
+                    placeholder = "0",
+                    leadingIcon = Icons.Default.AttachMoney,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+        },
+        confirmButton = {
+            CustomButton(
+                text = "Save",
+                onClick = {
+                    onConfirm(buyPrice.toDoubleOrNull() ?: offer.buyPrice)
+                },
+                enabled = buyPrice.isNotBlank()
             )
         },
         dismissButton = {
