@@ -67,6 +67,11 @@ class SupplierRepositoryImpl @Inject constructor(
         )
     }
 
+        // Tambahkan fungsi ini di dalam class SupplierRepositoryImpl
+    override suspend fun updateSupplierPriceForProduct(productId: Long, supplierId: Long, newPrice: Double) {
+        productSupplierDao.updateBuyPrice(productId, supplierId, newPrice, Date())
+    }
+    
     override suspend fun removeSupplierFromProduct(productId: Long, supplierId: Long) {
         productSupplierDao.deleteProductSupplier(productId, supplierId)
     }
