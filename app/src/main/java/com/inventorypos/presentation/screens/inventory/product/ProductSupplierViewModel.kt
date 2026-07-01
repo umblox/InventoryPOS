@@ -7,6 +7,7 @@ import com.inventorypos.domain.model.SupplierOffer
 import com.inventorypos.domain.repository.ProductRepository
 import com.inventorypos.domain.repository.SupplierRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -31,16 +32,28 @@ class ProductSupplierViewModel @Inject constructor(
     val showAddDialog: StateFlow<Boolean> = _showAddDialog
 
     fun loadSuppliers(productId: Long) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _suppliers.value = supplierRepository.getSuppliersForProduct(productId)
-            supplierRepository.getAllSuppliers().collect { list ->
-                val existingIds = _suppliers.value.map { it.supplierId }
-                _allSuppliers.value = list.filter { it.id !in existingIds }
-            }
-            _isLoading.value = false
-        }
-    }
+     viewModelScope.launch {
+         _isLoading.value = true
+         try {
+             // 1. Ambil data supplier yang sudah terhubung dengan produk ini
+             _suppliers.value = supplierRepository.getSuppliersForProduct(productId)
+
+             // 2. Gunakan first() BUKAN collect(), agar coroutine tidak nyangkut (hanging)
+             val list = supplierRepository.getAllSuppliers().first()
+
+             // 3. Filter data agar supplier yang sudah terpilih tidak muncul lagi di dialog
+             val existingIds = _suppliers.value.map { it.supplierId }
+             _allSuppliers.value = list.filter { it.id !in existingIds }
+
+         } catch (e: Exception) {
+             // (Opsional) Anda bisa menambahkan log error di sini
+             e.printStackTrace()
+         } finally {
+             // 4. Finally menjamin loading PASTI BERHENTI, apapun yang terjadi di blok try
+             _isLoading.value = false
+         }
+     }
+ }
 
     fun addSupplier(productId: Long, supplierId: Long, buyPrice: Double, isPrimary: Boolean) {
         viewModelScope.launch {
