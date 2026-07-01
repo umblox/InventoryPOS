@@ -15,6 +15,6 @@ data class Product(
     val minStock: Int = 5,
     val unit: String = "pcs",
     val imageUrl: String? = null,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val supplierCount: Int = 0
 )
-
