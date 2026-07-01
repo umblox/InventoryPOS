@@ -53,7 +53,6 @@ class ProductSupplierViewModel @Inject constructor(
              _isLoading.value = false
          }
      }
- }
 
     fun addSupplier(productId: Long, supplierId: Long, buyPrice: Double, isPrimary: Boolean) {
         viewModelScope.launch {
