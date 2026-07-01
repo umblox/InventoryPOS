@@ -16,4 +16,6 @@ interface SupplierRepository {
     suspend fun addSupplierToProduct(productId: Long, supplierId: Long, buyPrice: Double, isPrimary: Boolean)
     suspend fun removeSupplierFromProduct(productId: Long, supplierId: Long)
     suspend fun setPrimarySupplier(productId: Long, supplierId: Long)
+    suspend fun updateSupplierPriceForProduct(productId: Long, supplierId: Long, newPrice: Double)
+    
 }
