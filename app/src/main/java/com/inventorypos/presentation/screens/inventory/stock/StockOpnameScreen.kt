@@ -1,18 +1,27 @@
 package com.inventorypos.presentation.screens.inventory.stock
 
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.inventorypos.domain.model.Product
 import com.inventorypos.presentation.components.common.*
 import com.inventorypos.presentation.theme.*
 
@@ -21,123 +30,194 @@ fun StockOpnameScreen(
     navController: NavController,
     viewModel: StockOpnameViewModel = hiltViewModel()
 ) {
+    val products by viewModel.displayedProducts.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val searchResults by viewModel.searchResults.collectAsState()
-    val selectedProduct by viewModel.selectedProduct.collectAsState()
-    
-    val systemStock by viewModel.systemStock.collectAsState()
-    val physicalStock by viewModel.physicalStock.collectAsState()
-    val notes by viewModel.notes.collectAsState()
+    val opnameInputs by viewModel.opnameInputs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
-    val error by viewModel.error.collectAsState()
-    
-    val variance = (physicalStock.toIntOrNull() ?: 0) - (systemStock.toIntOrNull() ?: 0)
 
-    LaunchedEffect(isSuccess) { if (isSuccess) navController.popBackStack() }
-    
+    val context = LocalContext.current
+
+    LaunchedEffect(isSuccess) {
+        if (isSuccess) {
+            Toast.makeText(context, "Opname berhasil! Stok telah disesuaikan.", Toast.LENGTH_LONG).show()
+            navController.popBackStack()
+        }
+    }
+
     Scaffold(
         topBar = {
             CustomTopBar(
                 title = "Stock Opname",
-                subtitle = "Physical stock count",
+                subtitle = "Hitung dan sesuaikan fisik barang",
                 onBackClick = { navController.popBackStack() }
             )
         },
+        bottomBar = {
+            // Hanya muncul jika ada minimal 1 barang yang di-opname
+            if (opnameInputs.isNotEmpty()) {
+                Surface(
+                    color = PremiumDarkSurface,
+                    shadowElevation = 16.dp,
+                    modifier = Modifier.navigationBarsPadding() // Mencegah tertutup navigasi OS
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "${opnameInputs.size} Barang Dihitung",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = PremiumTextPrimary
+                            )
+                            Text(
+                                text = "Siap untuk disesuaikan",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PremiumInfo
+                            )
+                        }
+                        CustomButton(
+                            text = "Simpan Opname",
+                            onClick = viewModel::finalizeOpname,
+                            icon = Icons.Default.Save,
+                            isLoading = isLoading
+                        )
+                    }
+                }
+            }
+        },
         containerColor = PremiumDarkBackground
     ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             
-            if (selectedProduct == null) {
+            // Search Bar untuk mode pencarian manual/scanner barcode
+            Box(modifier = Modifier.padding(16.dp)) {
                 CustomTextField(
                     value = searchQuery,
                     onValueChange = viewModel::onSearchQueryChange,
-                    label = "Search Product *",
-                    placeholder = "Type name or SKU...",
-                    leadingIcon = Icons.Default.Search
+                    placeholder = "Cari nama barang atau scan SKU/Barcode...",
+                    leadingIcon = Icons.Default.Search,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                
-                if (searchResults.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)) {
-                        items(searchResults) { product ->
-                            ProductSearchResultItem(product) { viewModel.selectProduct(product) }
-                        }
-                    }
-                }
+            }
+
+            if (isLoading && products.isEmpty()) {
+                LoadingIndicator()
+            } else if (products.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Default.Inventory,
+                    title = "Tidak ada barang",
+                    message = "Barang tidak ditemukan atau database kosong."
+                )
             } else {
-                SelectedProductCard(product = selectedProduct!!, onClear = viewModel::clearSelection)
-                
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        CustomTextField(
-                            value = systemStock,
-                            onValueChange = { },
-                            label = "System Stock",
-                            leadingIcon = Icons.Default.Computer,
-                            readOnly = true
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(products) { product ->
+                        val currentInput = opnameInputs[product.id]
+                        OpnameItemCard(
+                            product = product,
+                            physicalCount = currentInput,
+                            onCountChange = { qty -> viewModel.updatePhysicalCount(product.id, qty) },
+                            onClear = { viewModel.clearInput(product.id) }
                         )
                     }
-                    Box(modifier = Modifier.weight(1f)) {
-                        CustomTextField(
-                            value = physicalStock,
-                            onValueChange = viewModel::onPhysicalStockChange,
-                            label = "Physical Stock *",
-                            placeholder = "Count",
-                            leadingIcon = Icons.Default.FactCheck,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                    item { Spacer(modifier = Modifier.height(80.dp)) } // Ruang ekstra untuk BottomBar
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OpnameItemCard(
+    product: Product,
+    physicalCount: Int?, // Null jika belum diisi
+    onCountChange: (Int) -> Unit,
+    onClear: () -> Unit
+) {
+    val isCounted = physicalCount != null
+    
+    // Warna berubah menjadi kehijauan jika sudah diisi, menandakan "Selesai dihitung"
+    val containerColor = if (isCounted) PremiumSuccess.copy(alpha = 0.1f) else PremiumDarkSurface
+    val borderColor = if (isCounted) PremiumSuccess.copy(alpha = 0.5f) else PremiumDarkSurface
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = BorderStroke(1.dp, borderColor)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(product.name, style = MaterialTheme.typography.titleMedium, color = PremiumTextPrimary)
+                    Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodySmall, color = PremiumTextMuted)
+                }
+                if (isCounted) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = "Counted", tint = PremiumSuccess)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Divider(color = PremiumTextMuted.copy(alpha = 0.2f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Info Sistem
+                Column {
+                    Text("Stok Sistem", style = MaterialTheme.typography.labelSmall, color = PremiumTextMuted)
+                    Text("${product.stock} ${product.unit}", style = MaterialTheme.typography.titleMedium, color = PremiumGold)
+                }
+
+                // Info Selisih (Muncul jika ada input fisik)
+                if (isCounted) {
+                    val diff = physicalCount!! - product.stock
+                    val (diffColor, diffText) = when {
+                        diff > 0 -> PremiumInfo to "+$diff (Lebih)"
+                        diff < 0 -> PremiumError to "$diff (Hilang)"
+                        else -> PremiumTextSecondary to "Sesuai"
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Selisih", style = MaterialTheme.typography.labelSmall, color = PremiumTextMuted)
+                        Text(diffText, style = MaterialTheme.typography.titleSmall, color = diffColor, fontWeight = FontWeight.Bold)
                     }
                 }
-                
-                if (systemStock.isNotBlank() && physicalStock.isNotBlank()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.large,
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (variance == 0) PremiumSuccess.copy(alpha = 0.1f) else PremiumWarning.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Variance", color = PremiumTextSecondary)
-                            Text(
-                                "${if (variance > 0) "+" else ""}$variance",
-                                color = if (variance == 0) PremiumSuccess else PremiumWarning,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                            )
+
+                // Input Fisik Real
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isCounted) {
+                        IconButton(onClick = onClear, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "Batal", tint = PremiumError, modifier = Modifier.size(16.dp))
                         }
                     }
+                    OutlinedTextField(
+                        value = physicalCount?.toString() ?: "",
+                        onValueChange = { onCountChange(it.toIntOrNull() ?: 0) },
+                        placeholder = { Text("?", color = PremiumTextMuted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+                        modifier = Modifier.width(90.dp),
+                        textStyle = androidx.compose.ui.text.TextStyle(textAlign = TextAlign.Center, color = PremiumTextPrimary, fontWeight = FontWeight.Bold),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PremiumSuccess,
+                            unfocusedBorderColor = PremiumTextMuted
+                        ),
+                        singleLine = true
+                    )
                 }
-                
-                CustomTextField(
-                    value = notes,
-                    onValueChange = viewModel::onNotesChange,
-                    label = "Notes",
-                    placeholder = "Reason for variance",
-                    leadingIcon = Icons.Default.Notes,
-                    maxLines = 3,
-                    singleLine = false
-                )
-                
-                if (error != null) {
-                    Text(text = error!!, color = PremiumError, style = MaterialTheme.typography.bodySmall)
-                }
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                CustomButton(
-                    text = "Confirm Opname",
-                    onClick = viewModel::confirmOpname,
-                    isLoading = isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.CheckCircle,
-                    containerColor = if (variance == 0) PremiumSuccess else PremiumWarning
-                )
             }
         }
     }
