@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.inventorypos.domain.model.SmartPoItem
 import com.inventorypos.presentation.components.common.*
+import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
 
 @Composable
