@@ -3,6 +3,7 @@ package com.inventorypos.data.local.dao
 import androidx.room.*
 import com.inventorypos.data.local.entity.PurchaseOrderEntity
 import com.inventorypos.data.local.entity.PurchaseOrderItemEntity
+import com.inventorypos.data.local.entity.PurchaseOrderWithItems // <--- TAMBAHAN IMPORT INI
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -23,6 +24,7 @@ interface PurchaseOrderDao {
     @Query("SELECT * FROM purchase_orders ORDER BY createdAt DESC")
     fun getAllPurchaseOrders(): Flow<List<PurchaseOrderEntity>>
 
+    @Transaction // <--- TAMBAHAN: Wajib menggunakan @Transaction saat mengembalikan relasi seperti PurchaseOrderWithItems
     @Query("SELECT * FROM purchase_orders WHERE id = :id")
     suspend fun getPurchaseOrderById(id: Long): PurchaseOrderWithItems?
 
@@ -31,6 +33,4 @@ interface PurchaseOrderDao {
 
     @Update
     suspend fun updatePurchaseOrderItems(items: List<PurchaseOrderItemEntity>)
-    
 }
-
