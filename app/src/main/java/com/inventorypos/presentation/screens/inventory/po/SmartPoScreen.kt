@@ -40,7 +40,10 @@ fun SmartPoScreen(
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             Toast.makeText(context, "Purchase Orders created successfully!", Toast.LENGTH_SHORT).show()
-            navController.popBackStack()
+            // PERBAIKAN 2: Arahkan ke PoList, dan hapus SmartPo dari tumpukan backstack
+            navController.navigate(Screen.PoList.route) {
+                popUpTo(Screen.SmartPo.route) { inclusive = true }
+            }
         }
     }
 
@@ -61,7 +64,8 @@ fun SmartPoScreen(
             if (selectedQuantities.isNotEmpty()) {
                 Surface(
                     color = PremiumDarkSurface,
-                    shadowElevation = 16.dp
+                    shadowElevation = 16.dp,
+                    modifier = Modifier.navigationBarsPadding() // <--- PERBAIKAN 1: Mencegah tertutup tombol navigasi HP
                 ) {
                     Row(
                         modifier = Modifier
