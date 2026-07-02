@@ -186,6 +186,8 @@ fun QuickActionsPanel(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Quick Actions", style = MaterialTheme.typography.titleMedium, color = PremiumTextPrimary)
+        
+        // --- BARIS 1 ---
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             if (canManagePOS) {
                 QuickActionButton(Icons.Default.PointOfSale, "New Sale", PremiumGold, Modifier.weight(1f)) { navController.navigate(Screen.POS.route) }
@@ -194,12 +196,25 @@ fun QuickActionsPanel(
                 QuickActionButton(Icons.Default.Inventory, "Inventory", PremiumAccent, Modifier.weight(1f)) { navController.navigate(Screen.Inventory.route) }
             }
             if (canManageStock) {
-                QuickActionButton(Icons.Default.Inventory, "Stock In", PremiumInfo, Modifier.weight(1f)) { navController.navigate(Screen.StockIn.route) }
+                // PERBAIKAN 3: Tombol masuk ke Daftar PO
+                QuickActionButton(Icons.Default.LocalShipping, "Purchase Orders", PremiumInfo, Modifier.weight(1f)) { navController.navigate(Screen.PoList.route) }
+            }
+        }
+        
+        // --- BARIS 2 ---
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (canManageStock) {
+                QuickActionButton(Icons.Default.MoveToInbox, "Manual Stock In", PremiumInfo, Modifier.weight(1f)) { navController.navigate(Screen.StockIn.route) }
             }
             if (canManageUsers) {
                 QuickActionButton(Icons.Default.People, "Staffs", PremiumWarning, Modifier.weight(1f)) { navController.navigate(Screen.UserList.route) }
             } else {
                 QuickActionButton(Icons.Default.PersonAdd, "Customer", PremiumWarning, Modifier.weight(1f)) { navController.navigate(Screen.CustomerAdd.route) }
+            }
+            
+            // Spacer pembantu agar bentuk tombol tidak meregang aneh jika jumlahnya ganjil
+            if (canManageStock) {
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
