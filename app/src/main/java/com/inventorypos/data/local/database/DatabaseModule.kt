@@ -76,11 +76,13 @@ object DatabaseModule {
     @Provides
     fun provideStockDao(db: AppDatabase) = db.stockDao()
     
-    // ➕ TAMBAHAN: SupplierDao (dibutuhkan AppModule)
     @Provides
     fun provideSupplierDao(db: AppDatabase) = db.supplierDao()
     
-    // ➕ TAMBAHAN: ProductSupplierDao (dibutuhkan Smart PO)
     @Provides
     fun provideProductSupplierDao(db: AppDatabase) = db.productSupplierDao()
+    
+    // ➕ TAMBAHAN: PurchaseOrderDao
+    @Provides
+    fun providePurchaseOrderDao(db: AppDatabase) = db.purchaseOrderDao()
 }
