@@ -22,5 +22,15 @@ interface PurchaseOrderDao {
 
     @Query("SELECT * FROM purchase_orders ORDER BY createdAt DESC")
     fun getAllPurchaseOrders(): Flow<List<PurchaseOrderEntity>>
+
+    @Query("SELECT * FROM purchase_orders WHERE id = :id")
+    suspend fun getPurchaseOrderById(id: Long): PurchaseOrderWithItems?
+
+    @Update
+    suspend fun updatePurchaseOrder(po: PurchaseOrderEntity)
+
+    @Update
+    suspend fun updatePurchaseOrderItems(items: List<PurchaseOrderItemEntity>)
+    
 }
 
