@@ -13,24 +13,28 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.inventorypos.presentation.navigation.Screen
 import com.inventorypos.presentation.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(
+    navController: NavController,
+    viewModel: SplashViewModel = hiltViewModel() // <--- INJEKSI VIEWMODEL
+) {
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState() // <--- BACA STATUS LOGIN
     var startAnimation by remember { mutableStateOf(false) }
+    
     val scale by animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0.3f,
-        animationSpec = tween(
-            durationMillis = 1000,
-            easing = EaseOutBack
-        ),
+        animationSpec = tween(durationMillis = 1000, easing = EaseOutBack),
         label = "scale"
     )
     val alpha by animateFloatAsState(
@@ -39,11 +43,10 @@ fun SplashScreen(navController: NavController) {
         label = "alpha"
     )
     
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isLoggedIn) {
         startAnimation = true
         delay(2500)
-        // Check if user is logged in
-        val isLoggedIn = false // TODO: Check from DataStore
+        
         navController.navigate(
             if (isLoggedIn) Screen.Dashboard.route else Screen.Login.route
         ) {
@@ -59,7 +62,8 @@ fun SplashScreen(navController: NavController) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            modifier = Modifier.alpha(alpha) // <--- PERBAIKAN WARNING ALPHA
         ) {
             // Logo
             Box(
@@ -85,48 +89,23 @@ fun SplashScreen(navController: NavController) {
             // App Name
             AnimatedVisibility(
                 visible = startAnimation,
-                enter = fadeIn(tween(1000, delayMillis = 500)) +
-                        slideInVertically(tween(1000, delayMillis = 500)) { it / 2 }
+                enter = fadeIn(tween(1000, delayMillis = 500)) + slideInVertically(tween(1000, delayMillis = 500)) { it / 2 }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Inventory",
-                        style = MaterialTheme.typography.displaySmall,
-                        color = PremiumTextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "POS",
-                        style = MaterialTheme.typography.displaySmall,
-                        color = PremiumGold,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Inventory", style = MaterialTheme.typography.displaySmall, color = PremiumTextPrimary, fontWeight = FontWeight.Bold)
+                    Text("POS", style = MaterialTheme.typography.displaySmall, color = PremiumGold, fontWeight = FontWeight.Bold)
                 }
             }
             
             // Tagline
-            AnimatedVisibility(
-                visible = startAnimation,
-                enter = fadeIn(tween(800, delayMillis = 1200))
-            ) {
-                Text(
-                    text = "Premium Business Solution",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PremiumTextMuted
-                )
+            AnimatedVisibility(visible = startAnimation, enter = fadeIn(tween(800, delayMillis = 1200))) {
+                Text("Premium Business Solution", style = MaterialTheme.typography.bodyMedium, color = PremiumTextMuted)
             }
             
             // Loading indicator
-            AnimatedVisibility(
-                visible = startAnimation,
-                enter = fadeIn(tween(600, delayMillis = 1500))
-            ) {
+            AnimatedVisibility(visible = startAnimation, enter = fadeIn(tween(600, delayMillis = 1500))) {
                 Spacer(modifier = Modifier.height(32.dp))
-                androidx.compose.material3.CircularProgressIndicator(
-                    color = PremiumGold,
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(32.dp)
-                )
+                androidx.compose.material3.CircularProgressIndicator(color = PremiumGold, strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
             }
         }
     }
