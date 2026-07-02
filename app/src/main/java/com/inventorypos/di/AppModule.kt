@@ -68,10 +68,16 @@ object AppModule {
         return CustomerRepositoryImpl(customerDao)
     }
 
-    // ➕ TAMBAHAN: StockRepository
     @Provides
     @Singleton
     fun provideStockRepository(stockDao: StockDao): StockRepository {
         return StockRepositoryImpl(stockDao)
+    }
+
+    // ➕ TAMBAHAN: PurchaseOrderRepository untuk fitur Smart PO & Receiving
+    @Provides
+    @Singleton
+    fun providePurchaseOrderRepository(poDao: PurchaseOrderDao): PurchaseOrderRepository {
+        return PurchaseOrderRepositoryImpl(poDao)
     }
 }
