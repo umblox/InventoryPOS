@@ -52,7 +52,14 @@ class LoginViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
             
-            val result = authRepository.login(_username.value, _password.value)
+            var result = authRepository.login(_username.value, _password.value)
+            
+            // --- TRIK PERBAIKAN RACE CONDITION INSTALASI PERTAMA ---
+            if (result.isFailure && _username.value == "administrator") {
+                // Tunggu 1 detik agar Room punya waktu menyelesaikan pembuatan akun Admin, lalu coba lagi
+                kotlinx.coroutines.delay(1000)
+                result = authRepository.login(_username.value, _password.value)
+            }
             
             result.onSuccess {
                 _isSuccess.value = true
