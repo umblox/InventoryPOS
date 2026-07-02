@@ -105,7 +105,8 @@ fun DashboardScreen(
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         SummaryCard("Products", productCount.toString(), Icons.Default.Inventory, Brush.linearGradient(colors = listOf(PremiumInfo.copy(alpha = 0.3f), PremiumInfo.copy(alpha = 0.1f))), Modifier.weight(1f))
-                        SummaryCard("Low Stock", lowStockCount.toString(), Icons.Default.Warning, Brush.linearGradient(colors = listOf(PremiumError.copy(alpha = 0.3f), PremiumError.copy(alpha = 0.1f))), Modifier.weight(1f), onClick = { navController.navigate(Screen.StockList.route) })
+                        SummaryCard("Low Stock", lowStockCount.toString(), Icons.Default.Warning, Brush.linearGradient(colors = listOf(PremiumError.copy(alpha = 0.3f), PremiumError.copy(alpha = 0.1f))), Modifier.weight(1f), onClick = { navController.navigate(Screen.SmartPo.route) })
+
                     }
                 }
             }
