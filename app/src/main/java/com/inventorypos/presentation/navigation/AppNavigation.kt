@@ -14,6 +14,7 @@ import com.inventorypos.presentation.screens.customers.*
 import com.inventorypos.presentation.screens.dashboard.DashboardScreen
 import com.inventorypos.presentation.screens.inventory.*
 import com.inventorypos.presentation.screens.inventory.category.*
+import com.inventorypos.presentation.screens.inventory.po.*
 import com.inventorypos.presentation.screens.inventory.product.*
 import com.inventorypos.presentation.screens.inventory.stock.*
 import com.inventorypos.presentation.screens.inventory.supplier.*
@@ -337,6 +338,23 @@ composable(
         
         composable(Screen.Profile.route) {
             ProfileScreen(navController)
+        }
+
+        // === PURCHASE ORDER (SMART PO) SCREENS ===
+        composable(Screen.SmartPo.route) {
+            SmartPoScreen(navController)
+        }
+        
+        composable(Screen.PoList.route) {
+            PoListScreen(navController)
+        }
+        
+        composable(
+            route = Screen.PoDetail.route,
+            arguments = listOf(navArgument("poId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val poId = backStackEntry.arguments?.getLong("poId") ?: 0L
+            PoDetailScreen(navController, poId)
         }
     }
 }
