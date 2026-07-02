@@ -17,9 +17,11 @@ import com.inventorypos.data.local.entity.*
         CustomerEntity::class,
         StockLogEntity::class,
         ProductSupplierEntity::class,
-        UserPermissionEntity::class
+        UserPermissionEntity::class,
+        PurchaseOrderEntity::class,       // <--- TAMBAHAN ENTITAS PO
+        PurchaseOrderItemEntity::class    // <--- TAMBAHAN ENTITAS ITEM PO
     ],
-    version = 2,
+    version = 3, // <--- Naikkan ke versi 3 agar tabel baru otomatis dibuat
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -33,4 +35,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun supplierDao(): SupplierDao
     abstract fun productSupplierDao(): ProductSupplierDao
     abstract fun userPermissionDao(): UserPermissionDao
+    abstract fun purchaseOrderDao(): PurchaseOrderDao // <--- TAMBAHAN DAO PO
 }
