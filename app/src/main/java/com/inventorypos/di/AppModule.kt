@@ -77,7 +77,11 @@ object AppModule {
     // ➕ TAMBAHAN: PurchaseOrderRepository untuk fitur Smart PO & Receiving
     @Provides
     @Singleton
-    fun providePurchaseOrderRepository(poDao: PurchaseOrderDao): PurchaseOrderRepository {
-        return PurchaseOrderRepositoryImpl(poDao)
+    fun providePurchaseOrderRepository(
+        poDao: PurchaseOrderDao,
+        productDao: ProductDao, // <--- Tambahkan
+        stockDao: StockDao      // <--- Tambahkan
+    ): PurchaseOrderRepository {
+        return PurchaseOrderRepositoryImpl(poDao, productDao, stockDao)
     }
 }
